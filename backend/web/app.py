@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from openai import OpenAIError
+from pydantic_core import SchemaValidator
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
 from ..database import workflow_from_id
@@ -175,7 +176,7 @@ async def create_or_update_schema(schema: Schema):
 async def delete_schema(user_id: str, schema_id: str):
     """Delete a schema"""
     filters = {"id": schema_id, "user_id": user_id}
-    return delete_entity(Skill, filters=filters)
+    return delete_entity(Schema, filters=filters)
 
 
 @api.get("/skills")
