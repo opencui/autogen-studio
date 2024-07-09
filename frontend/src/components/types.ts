@@ -86,6 +86,52 @@ export interface IModelConfig {
   id?: number;
 }
 
+export interface IModelConfig {
+  model: string;
+  api_key?: string;
+  api_version?: string;
+  base_url?: string;
+  api_type?: "open_ai" | "azure" | "google";
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  description?: string;
+  id?: number;
+}
+
+export interface ISchemaField {
+  name: string;
+  description?: string;
+  true_type: 'any' | 'int' | 'float' | 'boolean' | 'string';  // default 为 'any'
+  mode: 'any' | 'input' | 'output'; // default 为 any
+}
+
+export interface ISchema {
+  id?: number;  // 主键，跟随后端数据库使用的主键类型
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string; // user.email
+  name: string;
+  description: string;
+  fields: ISchemaField[];
+}
+
+export interface ICollection {
+  id?: number;  // 主键，跟随后端数据库使用的主键类型
+  name: string;
+  description: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string; // user.email
+  schema_id?: string;
+  table_name?: string; //不确定需不需要，如果需要应由后端生成确保唯一性，对应具体collection的table name
+}
+
+export interface ICollectionRow {
+  id?: string;  // 主键，跟随后端数据库使用的主键类型
+  [key: string]: any;
+}
+
 export interface IMetadataFile {
   name: string;
   path: string;
