@@ -256,7 +256,7 @@ const SchemaConfigMainView = ({
               dataIndex: "",
               width: 50,
               render: (_, record, index) => {
-                return <div className="hover:visible">
+                return <div className="hidden-cell">
                   <DeleteOutlined
                     onClick={(e) => {
                       e.preventDefault();
