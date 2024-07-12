@@ -6,7 +6,7 @@ import {
   PlusIcon,
   TrashIcon
 } from "@heroicons/react/24/outline";
-import { Button, Dropdown, Input, MenuProps, Modal, Select, Switch, Upload, UploadFile, UploadProps, message } from "antd";
+import { Button, Dropdown, GetProp, Input, MenuProps, Modal, Select, Switch, Upload, UploadFile, UploadProps, message } from "antd";
 import { LeftOutlined, UploadOutlined } from "@ant-design/icons";
 import * as React from "react";
 import { ICollection, ISchema, IStatus } from "../../types";
@@ -311,22 +311,23 @@ const CollectionsView = ({ }: any) => {
 
   const handleUpload = () => {
     const formData = new FormData();
-
+    type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
     fileList.forEach((file) => {
-      formData.append('files[]', file as any);
+      formData.append('files[]', file as FileType);
     });
     formData.append("user_id", createData?.user_id || "");
     formData.append("name", createData?.name || "");
     formData.append("description", createData?.description || "");
     setLoading(true);
-    // You can use any AJAX library you like
+
+    console.log('formdata:', formData);
     const payLoad = {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(formData),
+      body: formData,
     };
 
     const onSuccess = (data: any) => {
