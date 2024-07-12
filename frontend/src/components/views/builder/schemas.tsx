@@ -271,7 +271,6 @@ const SchemasView = ({ }: any) => {
     );
   };
 
-  console.log(showNewSchemaDetail);
   return (
     <div className="text-primary  ">
       {selectedSchema && (

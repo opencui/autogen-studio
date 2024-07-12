@@ -33,41 +33,46 @@ const RowModal = ({
     title="Add a row"
     open={!!value}
     onOk={() => {
-      if (!data.name) {
-        message.warning('Name is required');
-        return;
-      }
       onSave(data);
     }}
     onCancel={close}
   >
-    {fields.map((field) => {
+    {fields.map((field, index) => {
 
       let control: React.ReactNode = "";
       switch (field.true_type) {
         case 'boolean':
-          control = <Switch checked={data[field.name] as boolean} onChange={(checked) => {
+          control = <Switch key={index} checked={data.data && data.data[field.name] as boolean} onChange={(checked) => {
             setData({
               ...data,
-              [field.name]: checked
+              data: {
+                ...data.data,
+                [field.name]: checked
+              }
             })
           }} />
           break;
         default:
           control = <Input
+            key={index}
             className="mt-2 w-full"
-            value={data?.name}
-            placeholder="Please enter the name of the field"
+            value={data.data && data.data[field.name]}
+            placeholder="Please enter the value of the field"
             onChange={(e) => {
               setData({
-                ...data, name: e.target.value
+                ...data,
+                data: {
+                  ...data.data,
+                  [field.name]: e.target.value
+                }
               });
             }}
           />
       }
 
       return <ControlRowView
-        title="Name"
+        title={field.name}
+        key={index}
         className="mt-4"
         description=""
         value={""}
@@ -95,7 +100,7 @@ const CollectionConfigMainView = ({
   const createModelUrl = `${serverUrl}/models`;
   const listUrl = `${serverUrl}/collection_rows?collection_id=${collection.id}`;
   const saveRowUrl = `${serverUrl}/collection_rows?collection_id=${collection.id}`;
-  const schemaUrl = `${serverUrl}/schemas?schema_id=${collection.schema_id}`;
+  const schemaUrl = `${serverUrl}/schemas?user_id=${user?.email}&schema_id=${collection.schema_id}`;
   const [schema, setSchema] = React.useState<ISchema | undefined>(undefined);
   const fetchData = () => {
     setLoading(true);
@@ -108,7 +113,7 @@ const CollectionConfigMainView = ({
 
     const onSuccess = (data: any) => {
       if (data && data.status) {
-        message.success(data.message);
+        // message.success(data.message);
         setData(data.data)
         setModelStatus(data.data);
       } else {
@@ -135,8 +140,8 @@ const CollectionConfigMainView = ({
 
     const onSuccess = (data: any) => {
       if (data && data.status) {
-        message.success(data.message);
-        setSchema(data.data);
+        // message.success(data.message);
+        setSchema(data.data[0]);
         setModelStatus(data.data);
       } else {
         message.error(data.message);
@@ -163,8 +168,10 @@ const CollectionConfigMainView = ({
     };
 
     const onSuccess = (data: any) => {
+      // console.log('on success:', data);
       if (data && data.status) {
         message.success(data.message);
+        fetchData();
         setModelStatus(data.data);
       } else {
         message.error(data.message);
@@ -179,7 +186,7 @@ const CollectionConfigMainView = ({
     fetchJSON(saveRowUrl, payLoad, onSuccess, onError);
   };
 
-  const deleteRow = (rowId: string) => {
+  const deleteRow = (rowId: number) => {
     const deleteRowUrl = `${serverUrl}/collection_rows/delete?collection_id=${collection.id}&row_id=${rowId}`;
     setModelStatus(null);
     setLoading(true);
@@ -193,6 +200,7 @@ const CollectionConfigMainView = ({
     const onSuccess = (data: any) => {
       if (data && data.status) {
         message.success(data.message);
+        fetchData();
         setModelStatus(data.data);
       } else {
         message.error(data.message);
@@ -235,12 +243,7 @@ const CollectionConfigMainView = ({
     <div className="relative ">
       <RowModal
         value={newRow || selectedRow || undefined}
-        fields={schema?.fields || (data && data.length && Object.keys(data[0]).filter((k) => k !== "id").map((k) => ({
-          name: k,
-          description: "",
-          true_type: "any",
-          mode: "any"
-        }))) || []}
+        fields={(schema && schema.fields || [])}
         onSave={(nextValue: ICollectionRow) => {
           if (nextValue) {
             saveRow(nextValue);
@@ -256,9 +259,8 @@ const CollectionConfigMainView = ({
           setSelectedIndex(-1);
         }}
       />
-
       <ControlRowView
-        title=""
+        title="Fields"
         className="mt-4"
         description="Fields of the collection"
         value={""}
@@ -266,10 +268,8 @@ const CollectionConfigMainView = ({
           type="primary"
           onClick={() => {
             setNewRow({
-              name: "",
-              description: "",
-              true_type: "any",
-              mode: "any"
+              collection_id: collection.id!,
+              data: {}
             });
           }}>Add</Button>}
         control={
@@ -292,7 +292,7 @@ const CollectionConfigMainView = ({
 
                   return {
                     title: field.name,
-                    dataIndex: field.name
+                    dataIndex: ["data", field.name]
                   }
                 })
               ),
@@ -302,7 +302,9 @@ const CollectionConfigMainView = ({
                 render: (_, record, index) => {
                   return <div className="hover">
                     <DeleteOutlined
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         if (record.id) {
                           deleteRow(record.id);
                         }
@@ -315,7 +317,7 @@ const CollectionConfigMainView = ({
         }
       />
 
-      {collectionStatus && (
+      {/*collectionStatus && (
         <div
           className={`text-sm border mt-4 rounded text-secondary p-2 ${collectionStatus.status ? "border-accent" : " border-red-500 "
             }`}
@@ -323,9 +325,9 @@ const CollectionConfigMainView = ({
           <InformationCircleIcon className="h-4 w-4 inline mr-1" />
           {collectionStatus.message}
 
-          {/* <span className="block"> Note </span> */}
+          {/* <span className="block"> Note </span>}
         </div>
-      )}
+      ) */}
 
       <div className="w-full mt-4 text-right">
 

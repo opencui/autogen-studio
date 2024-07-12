@@ -128,8 +128,11 @@ export interface ICollection {
 }
 
 export interface ICollectionRow {
-  id?: string;  // 主键，跟随后端数据库使用的主键类型
-  [key: string]: any;
+  id?: number;  // 主键，跟随后端数据库使用的主键类型
+  collection_id: number;
+  data: {
+    [key: string]: any
+  }
 }
 
 export interface IMetadataFile {

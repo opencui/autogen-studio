@@ -375,9 +375,16 @@ const CollectionsView = ({ }: any) => {
             }
 
             if (createWithSchema) {
+
+              if (!createData.schema_id) {
+                message.warning('please select a schema');
+                return;
+              }
+
               saveCollection(createData, (nextCollection) => {
                 setShowCreateModal(false);
                 setSelectedCollection(nextCollection);
+                setShowCollectionDetail(true);
               });
             } else {
               handleUpload();
@@ -448,6 +455,7 @@ const CollectionsView = ({ }: any) => {
                   <Select
                     className="w-full"
                     value={createData.schema_id}
+                    placeholder="Please select a schema"
                     onChange={(value) => {
                       setCreateData({
                         ...createData,
