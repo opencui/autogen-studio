@@ -4,14 +4,15 @@ import queue
 import threading
 import traceback
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Collection
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from openai import OpenAIError
 from pydantic_core import SchemaValidator
+from sqlalchemy.sql.elements import CollectionAggregate
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
 from ..database import workflow_from_id
@@ -25,6 +26,8 @@ from ..datamodel import (
     Skill,
     Workflow,
     Schema,
+    Collections,
+    CollectionRow,
 )
 from ..utils import (
     check_and_cast_datetime_fields,
@@ -179,6 +182,59 @@ async def delete_schema(user_id: str, schema_id: str):
     """Delete a schema"""
     filters = {"id": schema_id, "user_id": user_id}
     return delete_entity(Schema, filters=filters)
+
+
+@api.get("/collections")
+async def list_collections(user_id: str, collection_id: None | int = None):
+    """List all collections for a user"""
+    filters = {"user_id": user_id}
+    if collection_id is not None:
+        filters["collection_id"] = collection_id
+    return list_entity(Collections, filters=filters)
+
+
+@api.post("/collections")
+async def create_or_update_collections(
+    req: Request,
+    collections: Collections,
+    with_csv: bool = False,
+):
+    """Create or update one collection"""
+    if with_csv:
+        body = await req.body()
+        return
+    return create_entity(collections, Collections, {})
+
+
+@api.delete("/collections/delete")
+async def delete_collection(user_id: str, collection_id: int):
+    """Delete a collection"""
+    filters = {"id": collection_id, "user_id": user_id}
+    return delete_entity(Collections, filters=filters)
+
+
+@api.get("/collection_rows")
+async def list_collection_rows(collection_id: None | int = None):
+    """List all collection_rows"""
+    filters = {}
+    if collection_id is not None:
+        filters["collection_id"] = collection_id
+    return list_entity(CollectionRow, filters=filters)
+
+
+@api.post("/collection_rows")
+async def create_or_update_collection_rows(
+    collection_row: CollectionRow,
+):
+    """Create or update one collection_row"""
+    return create_entity(collection_row, CollectionRow, {})
+
+
+@api.delete("/collection_rows/delete")
+async def delete_collection_row(collection_id: int, row_id: int):
+    """Delete a collection_row"""
+    filters = {"id": row_id, "collection_id": collection_id}
+    return delete_entity(CollectionRow, filters=filters)
 
 
 @api.get("/skills")

@@ -332,3 +332,27 @@ class Schema(SQLModel, table=True):
     fields: List[SchemaField] = Field(
         default_factory=List[SchemaField], sa_column=Column(JSON)
     )
+
+
+class Collections(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
+    )
+    user_id: Optional[str] = None
+    name: str
+    description: str
+    schema_id: Optional[str] = None
+
+
+class CollectionRow(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+    collection_id: int
+    data: Optional[Dict] = Field(default={}, sa_column=Column(JSON))
