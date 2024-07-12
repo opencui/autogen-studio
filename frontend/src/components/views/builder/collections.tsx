@@ -320,7 +320,6 @@ const CollectionsView = ({ }: any) => {
     formData.append("description", createData?.description || "");
     setLoading(true);
 
-    console.log('formdata:', formData);
     const payLoad = {
       method: "POST",
       headers: {
@@ -335,6 +334,7 @@ const CollectionsView = ({ }: any) => {
         message.success(data.message);
         setShowCreateModal(false);
         setSelectedCollection(data.data);
+        setShowCollectionDetail(true);
       } else {
         message.error(data.message);
       }
@@ -467,7 +467,7 @@ const CollectionsView = ({ }: any) => {
                   </Select>
                 }
               />
-              : <Upload className="w-full" {...uploadProps}>
+              : <Upload className="w-full" {...uploadProps} accept=".csv">
                 <Button icon={<UploadOutlined />}>Click here or drag a CSV file into this area to upload it</Button>
               </Upload>
           }
