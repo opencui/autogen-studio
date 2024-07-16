@@ -1,4 +1,6 @@
 import asyncio
+import string
+import random
 import os
 import queue
 import threading
@@ -13,6 +15,9 @@ from loguru import logger
 from openai import OpenAIError
 from pydantic_core import SchemaValidator
 from sqlalchemy.sql.elements import CollectionAggregate
+from starlette.datastructures import UploadFile
+from typing import List
+
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
 from ..database import workflow_from_id
@@ -26,6 +31,7 @@ from ..datamodel import (
     Skill,
     Workflow,
     Schema,
+    SchemaField,
     Collections,
     CollectionRow,
 )
@@ -196,14 +202,57 @@ async def list_collections(user_id: str, collection_id: None | int = None):
 @api.post("/collections")
 async def create_or_update_collections(
     req: Request,
-    collections: Collections,
     with_csv: bool = False,
 ):
     """Create or update one collection"""
     if with_csv:
-        body = await req.body()
+        body = await req.form()
+
+        data = {}
+        file: str | None | UploadFile = None
+        schema: None | Schema = None
+
+        for k in body.keys():
+            if k == "files[]":
+                file = body.get(k)
+            else:
+                data[k] = body.get(k)
+
+        if type(file) != UploadFile:
+            return
+
+        for i, line in enumerate(file.file.readlines()):
+            buf = line.strip().split(b",")
+            if i == 0:
+                user_id = data["user_id"]
+                name = "".join(
+                    random.choices(string.ascii_uppercase + string.digits, k=10)
+                )
+
+                description = "".join(
+                    random.choices(string.ascii_uppercase + string.digits, k=10)
+                )
+
+                fields: List[SchemaField] = [
+                    SchemaField(name=str(s), description=str(s)) for s in buf
+                ]
+
+                schema = Schema(
+                    name=name,
+                    description=description,
+                    user_id=user_id,
+                    fields=fields,
+                )
+
+                schema_id = create_entity(schema, Schema, {})["data"]["id"]
+                print(schema_id)
+
+            print(i, line, buf)
+
         return
-    return create_entity(collections, Collections, {})
+
+    data = await req.json()
+    return create_entity(Collections(**data), Collections, {})
 
 
 @api.delete("/collections/delete")
