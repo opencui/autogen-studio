@@ -307,12 +307,14 @@ class SchemaFieldMode(str, Enum):
 class SchemaField(SQLModel, table=False):
     name: str
     description: str
-    TrueType: SchemaFieldTrueType = Field(
+    true_type: SchemaFieldTrueType = Field(
         default=SchemaFieldTrueType.any, sa_column=Column(SqlEnum(SchemaFieldTrueType))
     )
-    Mode: SchemaFieldMode = Field(
+    mode: SchemaFieldMode = Field(
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
+    class Config:
+        use_enum_values = False   # Ensure enum names are used instead of values
 
 
 class Schema(SQLModel, table=True):

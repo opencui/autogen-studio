@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "backend"
 authors = [
-  { name="AutoGen Team", email="autogen@microsoft.com" },
+  { name="BeThere Team", email="help@bethere.ai" },
 ]
-description = "AutoGen Studio"
+description = "DSPy Studio"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.9, <3.13"
@@ -24,7 +24,6 @@ dependencies = [
     "typer",
     "uvicorn",
     "arxiv",
-    "pyautogen[gemini]>=0.2.0",
     "python-dotenv",
     "websockets",
     "numpy < 2.0.0",
@@ -61,7 +60,7 @@ filterwarnings = [
 
 
 [project.urls]
-"Homepage" = "https://github.com/microsoft/autogen"
+"Homepage" = "https://github.com/opencui/llmodule"
 "Bug Tracker" = "https://github.com/microsoft/autogen/issues"
 
 [project.scripts]
