@@ -222,14 +222,16 @@ const SchemaConfigMainView = ({
         className="mt-4"
         description="Fields of the schema"
         value={""}
-        extra={<Button onClick={() => {
-          setNewField({
-            name: "",
-            description: "",
-            true_type: "any",
-            mode: "any"
-          });
-        }}>Add</Button>}
+        extra={<Button
+          type="primary"
+          onClick={() => {
+            setNewField({
+              name: "",
+              description: "",
+              true_type: "any",
+              mode: "any"
+            });
+          }}>Add</Button>}
         control={
           <Table
             dataSource={schemaConfig.fields}

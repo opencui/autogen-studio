@@ -10,6 +10,7 @@
   --color-border-primary: #f7fafc;
   --color-border-secondary: #e2e8f045;
   --color-border-accent: #4182eb;
+  --color-border-custom: #d9d9d9;
 }
 
 .light {
@@ -24,6 +25,7 @@
   --color-border-primary: #2d3748c1;
   --color-border-secondary: #edf2f7;
   --color-border-accent: #4182eb;
+  --color-border-custom: #d9d9d9;
 }
 
 @tailwind base;
@@ -403,14 +405,34 @@ div#gatsby-focus-wrapper {
 
 /* custom */
 
-.ant-table-row {
-  .hidden-cell {
-    visibility: hidden;
-  }
+.ant-table {
+  border: 0.5px solid var(--color-border-custom);
+  border-radius: 4px;
 
-  &:hover {
+  .ant-table-row {
     .hidden-cell {
-      visibility: visible;
+      visibility: hidden;
+    }
+
+    &:hover {
+      .hidden-cell {
+        visibility: visible;
+      }
     }
   }
+}
+
+
+.ni-group-title-wrapper {
+
+  .title-line {
+    vertical-align: middle;
+    display: inline-block;
+    width: 3px;
+    height: 20px;
+    margin-right: 8px;
+    background-color: var(--color-bg-accent);
+  }
+
+
 }

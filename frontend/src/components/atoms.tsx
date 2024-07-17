@@ -568,9 +568,10 @@ export const ControlRowView = ({
   extra?: ReactNode
 }) => {
   return (
-    <div className={`${className}`}>
-      <div className="flex justify-between">
-        <span>
+    <div className={`ni-group ${className}`}>
+      <div className="ni-group-header flex justify-between items-center">
+        <span className="ni-group-title-wrapper">
+          <span className="title-line" />
           <span className="text-primary inline-block">{title} </span>
           <span className="text-xs ml-1 text-accent -mt-2 inline-block">
             {truncateText(value + "", truncateLength)}
@@ -586,7 +587,9 @@ export const ControlRowView = ({
         </span>
         <span className="self-end">{extra}</span>
       </div>
-      {control}
+      <div className="pt-2">
+        {control}
+      </div>
       <div className="bordper-b  border-secondary border-dashed pb-2 mxp-2"></div>
     </div>
   );
