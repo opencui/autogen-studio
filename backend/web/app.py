@@ -253,7 +253,10 @@ async def create_or_update_collections(
                     isHide=True,
                 )
 
-                data["schema_id"] = create_entity(schema, Schema, {})["data"]["id"]
+                schema = create_entity(schema, Schema, {})
+                print(schema)
+                data["schema_id"] = schema.get("data", {}).get("id", None)
+                print(data)
 
                 collection = create_entity(Collections(**data), Collections, {})
                 collection_id = collection.get("data", {}).get("id", None)
