@@ -242,7 +242,7 @@ async def create_or_update_collections(
                 )
 
                 fields: List[SchemaField] = [
-                    SchemaField(name=s, description=s).json() for s in buf
+                    SchemaField(name=s, description=s) for s in buf
                 ]
 
                 schema = Schema(
@@ -268,7 +268,6 @@ async def create_or_update_collections(
                         CollectionRow,
                         {},
                     )
-            print(i, line, buf)
 
         return collection
 
