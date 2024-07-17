@@ -173,7 +173,7 @@ async def list_schema(user_id: str, schema_id: None | str = None):
     """List all schemas for a user"""
     filters = {
         "user_id": user_id,
-        isHide: False,
+        "isHide": False,
     }
     if schema_id is not None:
         filters["id"] = schema_id
