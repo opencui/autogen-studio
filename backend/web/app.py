@@ -221,8 +221,13 @@ async def create_or_update_collections(
         if type(file) != UploadFile:
             return
 
+        collection = None
+        collection_id: None | int = None
+        keys: List = []
+
         for i, line in enumerate(file.file.readlines()):
-            buf = line.strip().split(b",")
+            buf = [s.decode("utf-8") for s in line.strip().split(b",")]
+
             if i == 0:
                 user_id = data["user_id"]
                 name = "".join(
@@ -234,7 +239,7 @@ async def create_or_update_collections(
                 )
 
                 fields: List[SchemaField] = [
-                    SchemaField(name=str(s), description=str(s)).json() for s in buf
+                    SchemaField(name=s, description=s).json() for s in buf
                 ]
 
                 schema = Schema(
@@ -244,12 +249,24 @@ async def create_or_update_collections(
                     fields=fields,
                 )
 
-                schema_id = create_entity(schema, Schema, {})["data"]["id"]
-                print(schema_id)
+                data["schema_id"] = create_entity(schema, Schema, {})["data"]["id"]
 
+                collection = create_entity(Collections(**data), Collections, {})
+                collection_id = collection.get("data", {}).get("id", None)
+
+                keys = buf
+            else:
+                if isinstance(collection_id, int):
+                    create_entity(
+                        CollectionRow(
+                            collection_id=collection_id, data=dict(zip(keys, buf))
+                        ),
+                        CollectionRow,
+                        {},
+                    )
             print(i, line, buf)
 
-        return
+        return collection
 
     data = await req.json()
     return create_entity(Collections(**data), Collections, {})
