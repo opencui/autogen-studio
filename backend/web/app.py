@@ -234,7 +234,7 @@ async def create_or_update_collections(
                 )
 
                 fields: List[SchemaField] = [
-                    SchemaField(name=str(s), description=str(s)) for s in buf
+                    SchemaField(name=str(s), description=str(s)).json() for s in buf
                 ]
 
                 schema = Schema(
