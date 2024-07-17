@@ -171,7 +171,10 @@ def delete_entity(model_class: Any, filters: dict = None):
 @api.get("/schemas")
 async def list_schema(user_id: str, schema_id: None | str = None):
     """List all schemas for a user"""
-    filters = {"user_id": user_id}
+    filters = {
+        "user_id": user_id,
+        isHide: False,
+    }
     if schema_id is not None:
         filters["id"] = schema_id
     return list_entity(Schema, filters=filters)
@@ -247,6 +250,7 @@ async def create_or_update_collections(
                     description=description,
                     user_id=user_id,
                     fields=fields,
+                    isHide=True,
                 )
 
                 data["schema_id"] = create_entity(schema, Schema, {})["data"]["id"]

@@ -326,6 +326,7 @@ class Schema(SQLModel, table=True):
         default_factory=datetime.now,
         sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
     )
+    isHide: bool = False
     user_id: Optional[str] = None
     name: str
     description: str
