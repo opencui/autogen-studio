@@ -177,6 +177,7 @@ async def list_schema(user_id: str, schema_id: None | str = None):
     }
     if schema_id is not None:
         filters["id"] = schema_id
+        filters["isHide"] = True
     return list_entity(Schema, filters=filters)
 
 
@@ -230,7 +231,6 @@ async def create_or_update_collections(
 
         for i, line in enumerate(file.file.readlines()):
             buf = [s.decode("utf-8") for s in line.strip().split(b",")]
-
             if i == 0:
                 user_id = data["user_id"]
                 name = "".join(
@@ -242,7 +242,7 @@ async def create_or_update_collections(
                 )
 
                 fields: List[SchemaField] = [
-                    SchemaField(name=s, description=s) for s in buf
+                    SchemaField(name=s, description=s).dict() for s in buf
                 ]
 
                 schema = Schema(
