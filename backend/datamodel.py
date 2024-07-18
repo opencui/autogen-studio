@@ -305,6 +305,12 @@ class SchemaFieldMode(str, Enum):
 
 
 class SchemaField(SQLModel, table=False):
+    model_config = ConfigDict(
+        json_encoders={
+            SchemaFieldTrueType: lambda v: v.value,
+            SchemaFieldMode: lambda v: v.value,
+        })
+
     name: str
     description: str
     true_type: SchemaFieldTrueType = Field(
@@ -313,8 +319,6 @@ class SchemaField(SQLModel, table=False):
     mode: SchemaFieldMode = Field(
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
-    class Config:
-        use_enum_values = False   # Ensure enum names are used instead of values
 
 
 class Schema(SQLModel, table=True):
