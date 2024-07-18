@@ -339,9 +339,6 @@ class Schema(SQLModel, table=True):
     user_id: Optional[str] = None
     name: str
     description: str
-    fields: List[Field] = Field(
-        default_factory=list, sa_column=Column(JSON)
-    )
 
 class SchemaFieldLink(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
