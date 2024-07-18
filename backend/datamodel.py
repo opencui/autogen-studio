@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from pydantic_core.core_schema import int_schema
@@ -14,6 +14,7 @@ from sqlmodel import (
     SQLModel,
     func,
 )
+
 from sqlmodel import (
     Enum as SqlEnum,
 )
@@ -290,7 +291,7 @@ class SocketMessage(SQLModel, table=False):
     type: str
 
 
-class SchemaFieldTrueType(str, Enum):
+class SchemaFieldTrueType(str, StrEnum):
     any = "any"
     int = "int"
     float = "float"
@@ -298,7 +299,7 @@ class SchemaFieldTrueType(str, Enum):
     string = "string"
 
 
-class SchemaFieldMode(str, Enum):
+class SchemaFieldMode(str, StrEnum):
     any = "any"
     input = "input"
     output = "output"
