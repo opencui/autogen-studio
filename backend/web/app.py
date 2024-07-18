@@ -31,7 +31,7 @@ from ..datamodel import (
     Skill,
     Workflow,
     Schema,
-    SchemaField,
+    Field,
     Collections,
     CollectionRow,
 )
@@ -241,8 +241,8 @@ async def create_or_update_collections(
                     random.choices(string.ascii_uppercase + string.digits, k=10)
                 )
 
-                fields: List[SchemaField] = [
-                    SchemaField(name=s, description=s) for s in buf
+                fields: List[Field] = [
+                    Field(name=s, description=s) for s in buf
                 ]
 
                 schema = Schema(

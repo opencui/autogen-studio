@@ -306,13 +306,14 @@ class SchemaFieldMode(str, Enum):
     output = "output"
 
 
-class SchemaField(SQLModel, table=False):
+class Field(SQLModel, table=True):
     model_config = ConfigDict(
         json_encoders={
             SchemaFieldTrueType: lambda v: v.value,
             SchemaFieldMode: lambda v: v.value,
         })
-
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: str
     true_type: SchemaFieldTrueType = Field(
@@ -338,8 +339,17 @@ class Schema(SQLModel, table=True):
     user_id: Optional[str] = None
     name: str
     description: str
-    fields: List[SchemaField] = Field(
+    fields: List[Field] = Field(
         default_factory=list, sa_column=Column(JSON)
+    )
+
+class SchemaFieldLink(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    schema_id: Optional[int] = Field(
+        default=None, foreign_key="schema.id", primary_key=True
+    )
+    field_id: Optional[int] = Field(
+        default=None, foreign_key="field.id", primary_key=True
     )
 
 
