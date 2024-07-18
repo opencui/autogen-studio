@@ -3,6 +3,7 @@ from enum import Enum, StrEnum
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from pydantic_core.core_schema import int_schema
+from pydantic import ConfigDict
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy import ForeignKey, Integer, orm
 from sqlmodel import (
