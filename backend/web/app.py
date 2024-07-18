@@ -241,19 +241,21 @@ async def create_or_update_collections(
                     random.choices(string.ascii_uppercase + string.digits, k=10)
                 )
 
-                fields: List[Field] = [
-                    Field(name=s, description=s) for s in buf
-                ]
+
 
                 schema = Schema(
                     name=name,
                     description=description,
                     user_id=user_id,
-                    fields=fields,
                     isHide=True,
                 )
 
                 data["schema_id"] = create_entity(schema, Schema, {})["data"]["id"]
+
+                for s in buf:
+                    field = Field(name=s, description=s, schema_id=date["schema_id"])
+                    create_entity(field, Field, {})
+
 
                 collection = create_entity(Collections(**data), Collections, {})
                 collection_id = collection.get("data", {}).get("id", None)
