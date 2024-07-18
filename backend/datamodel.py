@@ -306,7 +306,7 @@ class SchemaFieldMode(str, Enum):
     output = "output"
 
 
-class Field(SQLModel, table=True):
+class Slot(SQLModel, table=True):
     model_config = ConfigDict(
         json_encoders={
             SchemaFieldTrueType: lambda v: v.value,
