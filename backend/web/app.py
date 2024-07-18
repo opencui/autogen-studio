@@ -254,7 +254,7 @@ async def create_or_update_collections(
                 data["schema_id"] = create_entity(schema, Schema, {})["data"]["id"]
 
                 for s in buf:
-                    field = SchemaField(name=s, description=s, schema_id=date["schema_id"])
+                    field = SchemaField(name=s, description=s, schema_id=data["schema_id"])
                     create_entity(field, SchemaField, {})
 
 
