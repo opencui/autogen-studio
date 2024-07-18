@@ -30,6 +30,7 @@ from ..datamodel import (
     Session,
     Skill,
     Workflow,
+    SchemaField,
     Schema,
     Field,
     Collections,
