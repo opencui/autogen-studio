@@ -1,8 +1,9 @@
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from pydantic_core.core_schema import int_schema
+from pydantic import ConfigDict
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy import ForeignKey, Integer, orm
 from sqlmodel import (
@@ -14,6 +15,7 @@ from sqlmodel import (
     SQLModel,
     func,
 )
+
 from sqlmodel import (
     Enum as SqlEnum,
 )
@@ -290,7 +292,7 @@ class SocketMessage(SQLModel, table=False):
     type: str
 
 
-class SchemaFieldTrueType(str, Enum):
+class SchemaFieldTrueType(str, StrEnum):
     any = "any"
     int = "int"
     float = "float"
@@ -298,19 +300,25 @@ class SchemaFieldTrueType(str, Enum):
     string = "string"
 
 
-class SchemaFieldMode(str, Enum):
+class SchemaFieldMode(str, StrEnum):
     any = "any"
     input = "input"
     output = "output"
 
 
 class SchemaField(SQLModel, table=False):
+    model_config = ConfigDict(
+        json_encoders={
+            SchemaFieldTrueType: lambda v: v.value,
+            SchemaFieldMode: lambda v: v.value,
+        })
+
     name: str
     description: str
-    TrueType: SchemaFieldTrueType = Field(
+    true_type: SchemaFieldTrueType = Field(
         default=SchemaFieldTrueType.any, sa_column=Column(SqlEnum(SchemaFieldTrueType))
     )
-    Mode: SchemaFieldMode = Field(
+    mode: SchemaFieldMode = Field(
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
 
