@@ -273,9 +273,9 @@ async def create_or_update_collections(
                     )
 
         return collection
-
-    data = await req.json()
-    return create_entity(Collections(**data), Collections, {})
+    else:
+        data = await req.json()
+        return create_entity(Collections(**data), Collections, {})
 
 
 @api.delete("/collections/delete")
