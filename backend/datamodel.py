@@ -1,10 +1,12 @@
 from datetime import datetime
 from enum import Enum
+from types import NoneType
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from pydantic_core.core_schema import int_schema
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy import ForeignKey, Integer, orm
+from sqlalchemy.sql.expression import False_
 from sqlmodel import (
     JSON,
     Column,
@@ -239,6 +241,7 @@ class Agent(SQLModel, table=True):
             secondaryjoin="Agent.id==AgentLink.agent_id",
         ),
     )
+    scheam_id: Optional[str] = None
 
 
 class WorkFlowType(str, Enum):
@@ -365,3 +368,81 @@ class CollectionRow(SQLModel, table=True):
     )
     collection_id: int
     data: Optional[Dict] = Field(default={}, sa_column=Column(JSON))
+
+
+class PromptStrategyEnum(str, Enum):
+    predict = "Predict"
+    chain_of_thought = "ChainOfThought"
+    re_act = "ReAct"
+
+
+class OptimizerEnum(str, Enum):
+    bootstrap_few_shot = "BootstrapFewShot"
+    labeled_few_shot = "LabeledFewShot"
+    bootstrap_few_shot_with_random_search = "BootstrapFewShotWithRandomSearch"
+    bootstrap_few_shot_with_optuna_knnfewshot = "BootstrapFewShotWithOptuna, KNNFewShot"
+
+
+class SignatureCompileRequest(SQLModel, table=False):
+    agent_id: int
+    config_list: List[Any] = Field(default_factory=list)
+
+    model: List[int] = Field(default_factory=list)
+    training_sets: List[int] = Field(default_factory=list)
+    development_sets: List[int] = Field(default_factory=list)
+    prompt_strategy: PromptStrategyEnum = Field(
+        default=PromptStrategyEnum.predict,
+        sa_column=Column(SqlEnum(PromptStrategyEnum)),
+    )
+    optimizer: Optional[OptimizerEnum] = Field(
+        default=None, sa_column=Column(SqlEnum(OptimizerEnum))
+    )
+
+    metric: Dict = Field(default={}, sa_column=Column(JSON))
+
+    implementation_name: str = ""
+    implementation_description: str = ""
+
+    skills: List[Skill] = Relationship(
+        back_populates="agents", link_model=AgentSkillLink
+    )
+
+
+class Implementation(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    agent_id: Optional[int] = None
+    name: str
+    user_id: Optional[str] = None
+    description: Optional[str] = None
+    generated_prompt: Optional[str] = None
+
+    created_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
+    )
+
+
+class Evaluation(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    agent_id: Optional[int] = None
+    collection_id: Optional[int] = None
+    implementation_id: Optional[int] = None
+    metric: Dict = Field(default={}, sa_column=Column(JSON))
+    result: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
+
+
+class ImplementationTestRequest(SQLModel, table=False):
+    implementation_id: int
+    inputs: Dict = Field(default={}, sa_column=Column(JSON))
+
+
+class ImplementationTestResponse(SQLModel, table=False):
+    result: Dict = Field(default={}, sa_column=Column(JSON))
