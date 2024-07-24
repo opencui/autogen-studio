@@ -310,10 +310,10 @@ class SchemaFieldMode(str, Enum):
 class SchemaField(SQLModel, table=False):
     name: str
     description: str
-    TrueType: SchemaFieldTrueType = Field(
+    true_type: SchemaFieldTrueType = Field(
         default=SchemaFieldTrueType.any, sa_column=Column(SqlEnum(SchemaFieldTrueType))
     )
-    Mode: SchemaFieldMode = Field(
+    mode: SchemaFieldMode = Field(
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
 
@@ -336,6 +336,7 @@ class Schema(SQLModel, table=True):
     fields: List[SchemaField] = Field(
         default_factory=List[SchemaField], sa_column=Column(JSON)
     )
+    prefix: str
 
 
 class Collections(SQLModel, table=True):
@@ -402,10 +403,6 @@ class SignatureCompileRequest(SQLModel, table=False):
 
     implementation_name: str = ""
     implementation_description: str = ""
-
-    skills: List[Skill] = Relationship(
-        back_populates="agents", link_model=AgentSkillLink
-    )
 
 
 class Implementation(SQLModel, table=True):

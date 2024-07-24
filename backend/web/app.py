@@ -34,6 +34,7 @@ from ..datamodel import (
     SchemaField,
     Collections,
     CollectionRow,
+    Implementation,
 )
 from ..utils import (
     check_and_cast_datetime_fields,
@@ -304,6 +305,15 @@ async def delete_collection_row(collection_id: int, row_id: int):
     """Delete a collection_row"""
     filters = {"id": row_id, "collection_id": collection_id}
     return delete_entity(CollectionRow, filters=filters)
+
+
+@api.get("/implementation")
+async def list_implementation(agent_id: None | int = None):
+    filters = {}
+    if agent_id is not None:
+        filters["agent_id"] = agent_id
+
+    return list_entity(Implementation, filters=filters)
 
 
 @api.get("/skills")
