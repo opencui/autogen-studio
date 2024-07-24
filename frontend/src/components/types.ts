@@ -95,6 +95,7 @@ export interface ISchemaField {
   description?: string;
   true_type: 'any' | 'int' | 'float' | 'boolean' | 'string';  // default 为 'any'
   mode: 'any' | 'input' | 'output'; // default 为 any
+  prefix: string;
 }
 
 export interface ISchema {

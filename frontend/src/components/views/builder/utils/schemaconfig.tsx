@@ -24,7 +24,8 @@ const FieldModal = ({
     name: "",
     description: "",
     true_type: "any",
-    mode: "any"
+    mode: "any",
+    prefix: ""
   })
 
   React.useEffect(() => {
@@ -68,7 +69,7 @@ const FieldModal = ({
     <ControlRowView
       title="Description"
       className="mt-4"
-      description="Description of the schema"
+      description="Description of the field"
       value={""}
       control={
         <TextArea
@@ -122,6 +123,24 @@ const FieldModal = ({
         </Select>
       }
       control={""}
+    />
+    <ControlRowView
+      title="Prefix"
+      className="mt-4"
+      description="Prefix of the field"
+      value={""}
+      control={
+        <TextArea
+          className="mt-2 w-full"
+          value={data?.prefix}
+          placeholder="Please enter the prefix of the field"
+          onChange={(e) => {
+            setData({
+              ...data, prefix: e.target.value
+            });
+          }}
+        />
+      }
     />
   </Modal>
 }
