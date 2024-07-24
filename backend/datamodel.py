@@ -316,6 +316,7 @@ class SchemaField(SQLModel, table=False):
     mode: SchemaFieldMode = Field(
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
+    prefix: str
 
 
 class Schema(SQLModel, table=True):
@@ -336,7 +337,6 @@ class Schema(SQLModel, table=True):
     fields: List[SchemaField] = Field(
         default_factory=List[SchemaField], sa_column=Column(JSON)
     )
-    prefix: str
 
 
 class Collections(SQLModel, table=True):
