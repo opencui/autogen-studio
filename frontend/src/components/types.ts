@@ -48,6 +48,7 @@ export interface IAgentConfig {
   max_round?: number;
   speaker_selection_method?: string;
   allow_repeat_speaker?: boolean;
+
 }
 
 export interface IAgent {
@@ -58,6 +59,9 @@ export interface IAgent {
   id?: number;
   skills?: Array<ISkill>;
   user_id?: string;
+
+  // new fields
+  schema_id?: ISchema;
 }
 
 export interface IWorkflow {
@@ -71,19 +75,6 @@ export interface IWorkflow {
   summary_method?: "none" | "last" | "llm";
   id?: number;
   user_id?: string;
-}
-
-export interface IModelConfig {
-  model: string;
-  api_key?: string;
-  api_version?: string;
-  base_url?: string;
-  api_type?: "open_ai" | "azure" | "google";
-  user_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  description?: string;
-  id?: number;
 }
 
 export interface IModelConfig {
@@ -170,3 +161,59 @@ export interface ISkill {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ISignatureCompileRequest {
+  models: IModelConfig[];
+  training_sets: ICollection[];
+  development_sets: ICollection[];
+  optimizer?: 'LabeledFewShot' | 'BootstrapFewShot' | 'BootstrapFewShotWithRandomSearch' | 'BootstrapFewShotWithOptuna, KNNFewShot';
+  metric?: ISkill | IAgent;
+
+  implementation_name: string;
+  implementation_description: string;
+}
+
+export interface ISignatureCompileRequest {
+  agent_id?: number;
+  models: IModelConfig[];
+  training_sets: ICollection[];
+  development_sets: ICollection[];
+  optimizer?: 'LabeledFewShot' | 'BootstrapFewShot' | 'BootstrapFewShotWithRandomSearch' | 'BootstrapFewShotWithOptuna, KNNFewShot';
+  metric?: ISkill | IAgent;
+
+  implementation_name: string;
+  implementation_description: string;
+}
+
+export interface IImplementation {
+  agent_id?: number;
+  name: string;
+  id?: number;
+  description?: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+
+  generated_prompt?: string;
+}
+
+export interface IEvaluation {
+  agent_id?: number;
+  implementation_id?: number;
+  id?: number;
+  collection?: ICollection;
+  metric?: ISkill | IAgent;
+
+  result?: { [key: string]: string }[];
+}
+
+export interface IImplementationTestRequest {
+  implementation_id: number;
+  inputs: { [key: string]: any };
+}
+
+export interface IImplementationTestResponse {
+  result: { [key: string]: any };
+}
+
+

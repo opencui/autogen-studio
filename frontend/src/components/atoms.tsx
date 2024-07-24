@@ -582,7 +582,7 @@ export const ControlRowView = ({
             </Tooltip>
           }
           {
-            titleExtra && <span>{titleExtra}</span> || ""
+            titleExtra && <span className="ml-2">{titleExtra}</span> || ""
           }
         </span>
         <span className="self-end">{extra}</span>

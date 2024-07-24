@@ -5,12 +5,15 @@ import {
   Button,
   Form,
   Input,
+  InputNumber,
   Select,
   Slider,
+  Table,
   Tabs,
   message,
   theme,
 } from "antd";
+import { LeftOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   BugAntIcon,
   CpuChipIcon,
@@ -23,18 +26,23 @@ import {
   ModelSelector,
   SkillSelector,
 } from "./selectors";
-import { IAgent, ILLMConfig } from "../../../types";
+import { IAgent, ILLMConfig, ISchema, ISkill } from "../../../types";
 import TextArea from "antd/es/input/TextArea";
+import { cloneDeep } from "lodash";
 
 const { useToken } = theme;
 
 export const AgentConfigView = ({
   agent,
   setAgent,
+  schemas,
+  skills,
   close,
 }: {
   agent: IAgent;
   setAgent: (agent: IAgent) => void;
+  schemas: ISchema[];
+  skills: ISkill[];
   close: () => void;
 }) => {
   const nameValidation = checkAndSanitizeInput(agent?.config?.name);
@@ -43,6 +51,7 @@ export const AgentConfigView = ({
   const { user } = React.useContext(appContext);
   const serverUrl = getServerUrl();
   const createAgentUrl = `${serverUrl}/agents`;
+
   const [controlChanged, setControlChanged] = React.useState<boolean>(false);
 
   const onControlChange = (value: any, key: string) => {
@@ -54,6 +63,17 @@ export const AgentConfigView = ({
     const updatedAgent = {
       ...agent,
       config: { ...agent.config, [key]: value },
+    };
+
+    setAgent(updatedAgent);
+    setControlChanged(true);
+  };
+
+  const onAgentChange = (value: any, key: string) => {
+
+    const updatedAgent = {
+      ...agent,
+      [key]: value,
     };
 
     setAgent(updatedAgent);
@@ -114,21 +134,20 @@ export const AgentConfigView = ({
     <div className="text-primary">
       <Form>
         <div
-          className={`grid  gap-3 ${
-            agent.type === "groupchat" ? "grid-cols-2" : "grid-cols-1"
-          }`}
+        // className={`grid  gap-3 ${agent.type === "groupchat" ? "grid-cols-2" : "grid-cols-1"
+        //   }`}
         >
           <div className="">
             <ControlRowView
-              title="Agent Name"
+              title="Name"
               className=""
-              description="Name of the agent"
-              value={agent?.config?.name}
+              description="Name of the signature"
+              value=""
               control={
                 <>
                   <Input
                     className="mt-2"
-                    placeholder="Agent Name"
+                    placeholder="Signature Name"
                     value={agent?.config?.name}
                     onChange={(e) => {
                       onControlChange(e.target.value, "name");
@@ -144,15 +163,14 @@ export const AgentConfigView = ({
             />
 
             <ControlRowView
-              title="Agent Description"
+              title="Description"
               className="mt-4"
-              description="Description of the agent, used by other agents
-        (e.g. the GroupChatManager) to decide when to call upon this agent. (Default: system_message)"
-              value={agent.config.description || ""}
+              description=""
+              value={""}
               control={
                 <Input
                   className="mt-2"
-                  placeholder="Agent Description"
+                  placeholder="Signature Description"
                   value={agent.config.description || ""}
                   onChange={(e) => {
                     onControlChange(e.target.value, "description");
@@ -162,28 +180,140 @@ export const AgentConfigView = ({
             />
 
             <ControlRowView
+              title="Schema"
+              className="mt-4"
+              description=""
+              value={""}
+              extra={
+                <Select
+                  placeholder="Select schema"
+                  value={agent.schema_id}
+                  onChange={(value) => {
+                    onAgentChange(value, "schema_id");
+                  }}
+                >
+                  {
+                    schemas.map((opt) =>
+                      <Select.Option key={opt.id} value={opt.id}>
+                        {
+                          opt.name
+                        }
+                      </Select.Option>)
+                  }
+                </Select>
+              }
+              control={
+                <Table
+                  dataSource={agent.schema_id && schemas.filter((schema) => schema.id === agent.schema_id)}
+                  columns={[{
+                    title: "Name",
+                    dataIndex: "name"
+                  }, {
+                    title: "Description",
+                    dataIndex: "description"
+                  }]}
+                  rowKey="id"
+                />
+              }
+            />
+
+            <ControlRowView
+              title="Functions"
+              className="mt-4"
+              description=""
+              value={""}
+              extra={
+                <Select
+                  placeholder="Select function"
+                  value={null}
+                  onChange={(value) => {
+
+                    const nextSkills = cloneDeep(agent.skills) || [];
+                    const selected = skills.find((item) => item.id === value);
+
+                    if (selected) {
+                      nextSkills.push(selected);
+                    }
+
+                    onAgentChange(nextSkills, "skills");
+                  }}
+                >
+                  {
+                    skills.map((opt) =>
+                      <Select.Option key={opt.id} value={opt.id}>
+                        {
+                          opt.name
+                        }
+                      </Select.Option>)
+                  }
+                </Select>
+              }
+              control={
+                <Table
+                  dataSource={agent.skills}
+                  columns={[{
+                    title: "Name",
+                    dataIndex: "name"
+                  }, {
+                    title: "Description",
+                    dataIndex: "description"
+                  }, {
+                    dataIndex: "",
+                    width: 50,
+                    render: (_, record, index) => {
+                      return <div className="hover">
+                        <DeleteOutlined
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            const nextSkills = cloneDeep(agent.skills) || [];
+                            nextSkills.splice(index, 1);
+                            onAgentChange(nextSkills, "skills");
+                          }}
+                        />
+                      </div>;
+                    }
+                  }]}
+                  rowKey="id"
+                />
+              }
+            />
+
+            <ControlRowView
               title="Max Consecutive Auto Reply"
               className="mt-4"
               description="Max consecutive auto reply messages before termination."
-              value={agent.config?.max_consecutive_auto_reply}
-              control={
-                <Slider
-                  min={1}
-                  max={agent.type === "groupchat" ? 600 : 30}
-                  defaultValue={agent.config.max_consecutive_auto_reply}
-                  step={1}
-                  onChange={(value: any) => {
-                    onControlChange(value, "max_consecutive_auto_reply");
-                  }}
-                />
+              // value={agent.config?.max_consecutive_auto_reply}
+              value=""
+              titleExtra={<InputNumber
+                min={1}
+                max={agent.type === "groupchat" ? 600 : 30}
+                defaultValue={agent.config.max_consecutive_auto_reply}
+                step={1}
+                onChange={(value: any) => {
+                  onControlChange(value, "max_consecutive_auto_reply");
+                }}
+              />}
+              control={""
+                // <Slider
+                //   min={1}
+                //   max={agent.type === "groupchat" ? 600 : 30}
+                //   defaultValue={agent.config.max_consecutive_auto_reply}
+                //   step={1}
+                //   onChange={(value: any) => {
+                //     onControlChange(value, "max_consecutive_auto_reply");
+                //   }}
+                // />
               }
             />
 
             <ControlRowView
               title="Human Input Mode"
               description="Defines when to request human input"
-              value={agent.config.human_input_mode}
-              control={
+              // value={agent.config.human_input_mode}
+              value=""
+              titleExtra={
                 <Select
                   className="mt-2 w-full"
                   defaultValue={agent.config.human_input_mode}
@@ -199,13 +329,17 @@ export const AgentConfigView = ({
                   }
                 />
               }
+              control={
+                ""
+              }
             />
 
             <ControlRowView
               title="System Message"
               className="mt-4"
               description="Free text to control agent behavior"
-              value={agent.config.system_message}
+              // value={agent.config.system_message}
+              value=""
               control={
                 <TextArea
                   className="mt-2 w-full"
@@ -229,9 +363,10 @@ export const AgentConfigView = ({
                   title="Temperature"
                   className="mt-4"
                   description="Defines the randomness of the agent's response."
-                  value={llm_config.temperature}
-                  control={
-                    <Slider
+                  // value={llm_config.temperature}
+                  value=""
+                  titleExtra={
+                    <InputNumber
                       min={0}
                       max={2}
                       step={0.1}
@@ -245,13 +380,29 @@ export const AgentConfigView = ({
                       }}
                     />
                   }
+                  control={""
+                    // <Slider
+                    //   min={0}
+                    //   max={2}
+                    //   step={0.1}
+                    //   defaultValue={llm_config.temperature || 0.1}
+                    //   onChange={(value: any) => {
+                    //     const llm_config = {
+                    //       ...agent.config.llm_config,
+                    //       temperature: value,
+                    //     };
+                    //     onControlChange(llm_config, "llm_config");
+                    //   }}
+                    // />
+                  }
                 />
 
                 <ControlRowView
                   title="Agent Default Auto Reply"
                   className="mt-4"
                   description="Default auto reply when no code execution or llm-based reply is generated."
-                  value={agent.config.default_auto_reply || ""}
+                  // value={agent.config.default_auto_reply || ""}
+                  value=""
                   control={
                     <Input
                       className="mt-2"
@@ -267,10 +418,11 @@ export const AgentConfigView = ({
                 <ControlRowView
                   title="Max Tokens"
                   description="Max tokens generated by LLM used in the agent's response."
-                  value={llm_config.max_tokens}
+                  // value={llm_config.max_tokens}
+                  value=""
                   className="mt-4"
-                  control={
-                    <Slider
+                  titleExtra={
+                    <InputNumber
                       min={100}
                       max={50000}
                       defaultValue={llm_config.max_tokens || 1000}
@@ -283,15 +435,17 @@ export const AgentConfigView = ({
                       }}
                     />
                   }
+                  control=""
                 />
                 <ControlRowView
                   title="Code Execution Config"
                   className="mt-4"
                   description="Determines if and where code execution is done."
-                  value={agent.config.code_execution_config || "none"}
-                  control={
+                  // value={agent.config.code_execution_config || "none"}
+                  value=""
+                  titleExtra={
                     <Select
-                      className="mt-2 w-full"
+                      className="mt-2"
                       defaultValue={
                         agent.config.code_execution_config || "none"
                       }
@@ -307,19 +461,21 @@ export const AgentConfigView = ({
                       }
                     />
                   }
+                  control=""
                 />
               </CollapseBox>
             </div>
           </div>
           {/* ====================== Group Chat Config ======================= */}
-          {agent.type === "groupchat" && (
+          {/* {agent.type === "groupchat" && (
             <div>
               <ControlRowView
                 title="Speaker Selection Method"
                 description="How the next speaker is selected"
                 className=""
-                value={agent?.config?.speaker_selection_method || "auto"}
-                control={
+                // value={agent?.config?.speaker_selection_method || "auto"}
+                value=""
+                titleExtra={
                   <Select
                     className="mt-2 w-full"
                     defaultValue={
@@ -339,13 +495,15 @@ export const AgentConfigView = ({
                     }
                   />
                 }
+                control=""
               />
 
               <ControlRowView
                 title="Admin Name"
                 className="mt-4"
                 description="Name of the admin of the group chat"
-                value={agent.config.admin_name || ""}
+                // value={agent.config.admin_name || ""}
+                value=""
                 control={
                   <Input
                     className="mt-2"
@@ -398,7 +556,7 @@ export const AgentConfigView = ({
                 }
               />
             </div>
-          )}
+          )} */}
         </div>
       </Form>
 
@@ -413,10 +571,10 @@ export const AgentConfigView = ({
             }}
             loading={loading}
           >
-            {agent.id ? "Update Agent" : "Create Agent"}
+            {agent.id ? "Save" : "Create"}
           </Button>
         )}
-        <Button
+        {/* <Button
           className="ml-2"
           key="close"
           type="default"
@@ -425,7 +583,7 @@ export const AgentConfigView = ({
           }}
         >
           Close
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
@@ -434,10 +592,14 @@ export const AgentConfigView = ({
 export const AgentViewer = ({
   agent,
   setAgent,
+  schemas,
+  skills,
   close,
 }: {
   agent: IAgent | null;
   setAgent: (newAgent: IAgent) => void;
+  schemas: ISchema[];
+  skills: ISkill[];
   close: () => void;
 }) => {
   let items = [
@@ -446,7 +608,7 @@ export const AgentViewer = ({
         <div className="w-full  ">
           {" "}
           <BugAntIcon className="h-4 w-4 inline-block mr-1" />
-          Agent Configuration
+          Configuration
         </div>
       ),
       key: "1",
@@ -457,7 +619,7 @@ export const AgentViewer = ({
           )}
 
           {agent?.type && agent && (
-            <AgentConfigView agent={agent} setAgent={setAgent} close={close} />
+            <AgentConfigView agent={agent} setAgent={setAgent} schemas={schemas} skills={skills} close={close} />
           )}
         </div>
       ),
@@ -475,7 +637,7 @@ export const AgentViewer = ({
             </div>
           ),
           key: "2",
-          children: <AgentSelector agentId={agent?.id} />,
+          children: <AgentSelector agentId={agent?.idG} />,
         });
       }
 
@@ -508,6 +670,9 @@ export const AgentViewer = ({
     <div className="text-primary">
       {/* <RenderView viewIndex={currentViewIndex} /> */}
       <Tabs
+        tabBarExtraContent={{
+          left: <div className="mr-4"><LeftOutlined onClick={close} /> <a className="text-blue">Signature detail</a> </div>
+        }}
         tabBarStyle={{ paddingLeft: 0, marginLeft: 0 }}
         defaultActiveKey="1"
         items={items}
