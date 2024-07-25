@@ -307,6 +307,11 @@ class SchemaFieldMode(str, Enum):
     output = "output"
 
 
+class MetricType(str, Enum):
+    agent = "agent"
+    skill = "skill"
+
+
 class SchemaField(SQLModel, table=False):
     name: str
     description: str
@@ -399,7 +404,8 @@ class SignatureCompileRequest(SQLModel, table=False):
         default=None, sa_column=Column(SqlEnum(OptimizerEnum))
     )
 
-    metric: Dict = Field(default={}, sa_column=Column(JSON))
+    metric_id: int
+    metric_type: MetricType = Field(sa_column=Column(SqlEnum(MetricType)))
 
     implementation_name: str = ""
     implementation_description: str = ""
