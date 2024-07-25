@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Dropdown, MenuProps, Modal, message } from "antd";
 import * as React from "react";
-import { IAgent, ISchema, ISkill, IStatus } from "../../types";
+import { IAgent, ICollection, IModelConfig, ISchema, ISkill, IStatus } from "../../types";
 import { appContext } from "../../../hooks/provider";
 import {
   fetchJSON,
@@ -31,11 +31,15 @@ const AgentsView = ({ }: any) => {
   const serverUrl = getServerUrl();
   const listAgentsUrl = `${serverUrl}/agents?user_id=${user?.email}`;
   const listSchemasUrl = `${serverUrl}/schemas?user_id=${user?.email}`;
+  const listCollectionsUrl = `${serverUrl}/collections?user_id=${user?.email}`;
   const listSkillsUrl = `${serverUrl}/skills?user_id=${user?.email}`;
+  const listModelsUrl = `${serverUrl}/models?user_id=${user?.email}`;
 
-  const [agents, setAgents] = React.useState<IAgent[] | null>([]);
+  const [agents, setAgents] = React.useState<IAgent[]>([]);
   const [schemas, setSchemas] = React.useState<ISchema[]>([]);
   const [skills, setSkills] = React.useState<ISkill[]>([]);
+  const [collections, setCollections] = React.useState<ICollection[]>([]);
+  const [models, setModels] = React.useState<IModelConfig[]>([]);
   const [selectedAgent, setSelectedAgent] = React.useState<IAgent | null>(null);
 
   const [showNewDetailComp, setShowNewDetailComp] = React.useState(false);
@@ -168,12 +172,66 @@ const AgentsView = ({ }: any) => {
     fetchJSON(listSkillsUrl, payLoad, onSuccess, onError);
   };
 
+  const fetchCollections = () => {
+    setError(null);
+    setLoading(true);
+    const payLoad = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setCollections(data.data);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(listCollectionsUrl, payLoad, onSuccess, onError);
+  };
+
+  const fetchModels = () => {
+    setError(null);
+    setLoading(true);
+    const payLoad = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setModels(data.data);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(listModelsUrl, payLoad, onSuccess, onError);
+  };
+
   React.useEffect(() => {
     if (user) {
       // console.log("fetching messages", messages);
       fetchAgents();
       fetchSchemas();
       fetchSkills();
+      fetchCollections();
+      fetchModels();
     }
   }, []);
 
@@ -280,7 +338,7 @@ const AgentsView = ({ }: any) => {
 
     const closeDetail = () => {
       setShowDetailComp(false);
-      if (handler) {
+      if (handler) {g
         handler(localAgent);
       }
     };
@@ -304,6 +362,9 @@ const AgentsView = ({ }: any) => {
           setAgent={setLocalAgent}
           schemas={schemas}
           skills={skills}
+          models={models}
+          agents={agents}
+          collections={collections}
           close={closeDetail}
         />
       )

@@ -164,23 +164,14 @@ export interface ISkill {
 }
 
 export interface ISignatureCompileRequest {
-  models: IModelConfig[];
-  training_sets: ICollection[];
-  development_sets: ICollection[];
-  optimizer?: 'LabeledFewShot' | 'BootstrapFewShot' | 'BootstrapFewShotWithRandomSearch' | 'BootstrapFewShotWithOptuna, KNNFewShot';
-  metric?: ISkill | IAgent;
-
-  implementation_name: string;
-  implementation_description: string;
-}
-
-export interface ISignatureCompileRequest {
   agent_id?: number;
   models: IModelConfig[];
   training_sets: ICollection[];
   development_sets: ICollection[];
-  optimizer?: 'LabeledFewShot' | 'BootstrapFewShot' | 'BootstrapFewShotWithRandomSearch' | 'BootstrapFewShotWithOptuna, KNNFewShot';
-  metric?: ISkill | IAgent;
+  prompt_strategy?: 'Predict' | 'ChainOfThought' | 'ReAct';
+  optimizer?: 'LabeledFewShot' | 'BootstrapFewShot' | 'BootstrapFewShotWithRandomSearch' | 'BootstrapFewShotWithOptuna' | 'KNNFewShot';
+  metric_id?: number;
+  metric_type?: 'skill' | 'agent';
 
   implementation_name: string;
   implementation_description: string;
