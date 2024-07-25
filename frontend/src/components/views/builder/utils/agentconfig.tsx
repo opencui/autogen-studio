@@ -928,6 +928,9 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
         }
         compile();
       }}
+      onCancel={() => {
+        setSaveModalOpen(false);
+      }}
     >
       <ControlRowView
         title="Name"
