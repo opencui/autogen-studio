@@ -62,6 +62,7 @@ export interface IAgent {
 
   // new fields
   schema_id?: ISchema;
+  functions?: Array<ISkill>;
 }
 
 export interface IWorkflow {

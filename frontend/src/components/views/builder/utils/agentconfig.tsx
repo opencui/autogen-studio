@@ -228,14 +228,14 @@ export const AgentConfigView = ({
                   value={null}
                   onChange={(value) => {
 
-                    const nextSkills = cloneDeep(agent.skills) || [];
+                    const nextSkills = cloneDeep(agent.functions) || [];
                     const selected = skills.find((item) => item.id === value);
 
                     if (selected) {
                       nextSkills.push(selected);
                     }
 
-                    onAgentChange(nextSkills, "skills");
+                    onAgentChange(nextSkills, "functions");
                   }}
                 >
                   {
@@ -250,7 +250,7 @@ export const AgentConfigView = ({
               }
               control={
                 <Table
-                  dataSource={agent.skills}
+                  dataSource={agent.functions}
                   columns={[{
                     title: "Name",
                     dataIndex: "name"
@@ -267,9 +267,9 @@ export const AgentConfigView = ({
                             e.preventDefault();
                             e.stopPropagation();
 
-                            const nextSkills = cloneDeep(agent.skills) || [];
+                            const nextSkills = cloneDeep(agent.functions) || [];
                             nextSkills.splice(index, 1);
-                            onAgentChange(nextSkills, "skills");
+                            onAgentChange(nextSkills, "functions");
                           }}
                         />
                       </div>;
