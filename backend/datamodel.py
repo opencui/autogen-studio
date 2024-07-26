@@ -241,7 +241,7 @@ class Agent(SQLModel, table=True):
             secondaryjoin="Agent.id==AgentLink.agent_id",
         ),
     )
-    scheam_id: Optional[str] = None
+    schema_id: Optional[int] = None
 
 
 class WorkFlowType(str, Enum):
