@@ -236,9 +236,11 @@ const CollectionConfigMainView = ({
     fetchData();
     if (collection.schema_id) {
       fetchSchema();
+      console.log(schema);
     }
   }, [collection])
-
+  console.log("collection:", collection)
+  console.log(schema);
   return (
     <div className="relative ">
       <RowModal

@@ -14,7 +14,7 @@ import {
   message,
   theme,
 } from "antd";
-import { LeftOutlined, DeleteOutlined } from '@ant-design/icons';
+import { LeftOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import {
   BugAntIcon,
   CpuChipIcon,
@@ -27,7 +27,7 @@ import {
   ModelSelector,
   SkillSelector,
 } from "./selectors";
-import { IAgent, ICollection, ILLMConfig, IModelConfig, ISchema, ISignatureCompileRequest, ISkill } from "../../../types";
+import { IAgent, ICollection, IImplementation, ILLMConfig, IModelConfig, ISchema, ISignatureCompileRequest, ISkill } from "../../../types";
 import TextArea from "antd/es/input/TextArea";
 import { cloneDeep } from "lodash";
 import { Agent } from "http";
@@ -589,9 +589,10 @@ export const AgentConfigView = ({
   );
 };
 
-export const AgentCompileView = ({ agentId, models, collections, skills, agents }:
+export const AgentCompileView = ({ agentId, agent, models, collections, skills, agents }:
   {
     agentId: number,
+    agent: IAgent,
     models: IModelConfig[],
     collections: ICollection[],
     skills: ISkill[],
@@ -603,7 +604,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
   const [loading, setLoading] = React.useState<boolean>(false);
   const [data, setData] = React.useState<ISignatureCompileRequest>({
     agent_id: agentId,
-    models: [],
+    models: [null, null],
     training_sets: [],
     development_sets: [],
     implementation_name: "",
@@ -614,7 +615,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
   const [saveDesc, setSaveDesc] = React.useState<string>("");
   const [saveModalOpen, setSaveModalOpen] = React.useState<boolean>(false);
 
-  const cacheUrl = `${serverUrl}/implementation/request_cache?agent_id=${agentId}`
+  const cacheUrl = `${serverUrl}/implementations/request_cache?agent_id=${agentId}`
   const compileUrl = `${serverUrl}/implementations/compile`
   const fetchCache = () => {
     setLoading(true);
@@ -678,15 +679,20 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
 
   return <div className="">
     <ControlRowView
-      title="Models"
+      title="Model"
       description=""
       value=""
-      extra={<Select placeholder="Select model" value={null}
+      titleExtra={<Select placeholder="Select model" value={data.models[0]?.id}
         onChange={(value) => {
-          const nextModels = cloneDeep(data.models) || [];
+          const nextModels = cloneDeep(data.models) || [null, null];
           const selected = models.find((item) => item.id === value);
           if (selected) {
-            nextModels.push(selected);
+
+            if (nextModels.length < 1) {
+              nextModels.push(null, null)
+            }
+
+            nextModels[0] = selected
           }
 
           setData({
@@ -699,37 +705,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
           models.map((item) => <Select.Option key={item.id} value={item.id}>{item.model}</Select.Option>)
         }
       </Select>}
-      control={<Table
-        rowKey="id"
-        dataSource={data.models}
-        columns={[{
-          title: "Name",
-          dataIndex: "model"
-        }, {
-          title: "Description",
-          dataIndex: "description"
-        }, {
-          dataIndex: "",
-          width: 50,
-          render: (_, record, index) => {
-            return <div className="hidden-cell">
-              <DeleteOutlined
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-
-                  const nextModels = cloneDeep(data.models) || [];
-                  nextModels.splice(index, 1);
-                  setData({
-                    ...data,
-                    models: nextModels
-                  });
-                }}
-              />
-            </div>;
-          }
-        }]}
-      />}
+      control={""}
     />
     <ControlRowView
       title="Training set"
@@ -750,7 +726,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
         }}
       >
         {
-          collections.map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+          collections.filter(item => item.schema_id === agent.schema_id).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
         }
       </Select>}
       control={<Table
@@ -785,7 +761,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
         }]}
       />}
     />
-    <ControlRowView
+    {/* <ControlRowView
       title="Development set"
       description=""
       value=""
@@ -838,7 +814,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
           }
         }]}
       />}
-    />
+    /> */}
     <ControlRowView
       title="Prompt strategy"
       description=""
@@ -879,6 +855,39 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
       </Select>}
       control=""
     />
+    {data.optimizer && ['BootstrapFewShot', 'BootstrapFewShotWithRandomSearch', 'BootstrapFewShotWithOptuna'].indexOf(data.optimizer) !== -1 &&
+      <ControlRowView
+        title="Teacher model"
+        description=""
+        value=""
+        titleExtra={<Select placeholder="Select model" value={data.models[1]?.id}
+          onChange={(value) => {
+            const nextModels = cloneDeep(data.models) || [null, null];
+            const selected = models.find((item) => item.id === value);
+            if (selected) {
+
+              if (nextModels.length < 1) {
+                nextModels.push(null, null)
+              } else if (nextModels.length === 1) {
+                nextModels.push(null)
+              }
+
+              nextModels[1] = selected
+            }
+
+            setData({
+              ...data,
+              models: nextModels
+            });
+          }}
+        >
+          {
+            models.map((item) => <Select.Option key={item.id} value={item.id}>{item.model}</Select.Option>)
+          }
+        </Select>}
+        control={""}
+      /> || ""
+    }
     <ControlRowView
       title="Metric"
       description=""
@@ -957,7 +966,7 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
         control={
           <Input
             className="mt-2"
-            placeholder="SPlease enter the description of the implementation"
+            placeholder="Please enter the description of the implementation"
             value={saveDesc}
             onChange={(e) => {
               setSaveDesc(e.target.value);
@@ -968,6 +977,175 @@ export const AgentCompileView = ({ agentId, models, collections, skills, agents 
     </Modal>
   </div>;
 }
+
+export const ImplementationView = ({ agentId, models, collections, skills, agents }:
+  {
+    agentId: number,
+    models: IModelConfig[],
+    collections: ICollection[],
+    skills: ISkill[],
+    agents: IAgent[],
+  }) => {
+
+  const serverUrl = getServerUrl();
+
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [data, setData] = React.useState<IImplementation[]>([]);
+
+
+  const listImplementationUrl = `${serverUrl}/implementations?agent_id=${agentId}`
+  const deleteImplementationUrl = `${serverUrl}/implementations/delete?agent_id=${agentId}`
+
+  const fetchImplementations = () => {
+    setLoading(true);
+    const payLoad = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setData(data.data);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(listImplementationUrl, payLoad, onSuccess, onError);
+  };
+
+  const deleteImplementation = (id: number) => {
+    setLoading(true);
+    const payLoad = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        fetchImplementations();
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(deleteImplementationUrl, payLoad, onSuccess, onError);
+  };
+
+  React.useEffect(() => {
+    fetchImplementations();
+  }, [])
+
+  return <div className="">
+    <Table
+      dataSource={data}
+      columns={[{
+        title: "Name",
+        dataIndex: "name"
+      }, {
+        title: "Description",
+        dataIndex: "description"
+      }, {
+        title: "Time",
+        dataIndex: "created_at"
+      }, {
+        dataIndex: "",
+        width: 50,
+        render: (_, record, index) => {
+          return <div className="hidden-cell">
+            <DeleteOutlined
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (record.id) {
+                  deleteImplementation(record.id);
+                }
+              }}
+            />
+          </div>;
+        }
+      }]}
+      rowKey="id"
+    />
+  </div>;
+}
+
+export const ImplementationDetail = ({ implementation, agentId, models, collections, skills, agents }:
+  {
+    implementation: IImplementation
+    agentId: number,
+    models: IModelConfig[],
+    collections: ICollection[],
+    skills: ISkill[],
+    agents: IAgent[],
+  }) => {
+
+  const [data, setData] = React.useState<IImplementation>(implementation);
+
+  const [descEditing, setDescEditing] = React.useState<boolean>(false);
+  const [promptEditing, setPromptEditing] = React.useState<boolean>(false);
+
+  return <div className="mb-2   relative">
+    <div className="     rounded  ">
+      <div className="flex mt-2 pb-2 mb-2 border-b">
+        <div className="flex-1 font-semibold mb-2 ">
+          <LeftOutlined onClick={() => {
+
+          }} />
+          {" "}
+          <a>{data.name}</a>
+        </div>
+      </div>
+      <Button>Test</Button>
+    </div>
+    <ControlRowView
+      title="Description"
+      className="mt-4"
+      description=""
+      value={""}
+      control={
+        <Input
+          className="mt-2"
+          placeholder="Please enter the description of the implementation"
+          value={data.description}
+          onChange={(e) => {
+            setData({
+              ...data,
+              description: e.target.value
+            });
+          }}
+          readOnly={!descEditing}
+          suffix={!descEditing && <EditOutlined onClick={() => {
+            setDescEditing(true);
+          }}
+            onBlur={() => {
+              setDescEditing(false);
+            }}
+            onPressEnter={() => {
+              setDescEditing(false);
+            }}
+          />}
+        />
+      }
+    />
+  </div>
+};
+
 
 export const AgentViewer = ({
   agent,
@@ -1020,8 +1198,17 @@ export const AgentViewer = ({
           Compile
         </div>,
         key: "compile",
-        children: <AgentCompileView agentId={agent.id} models={models} collections={collections} skills={skills} agents={agents} />
+        children: <AgentCompileView agentId={agent.id} agent={agent} models={models} collections={collections} skills={skills} agents={agents} />
       })
+
+      // items.push({
+      //   label: <div className="w-full  ">
+      //     {" "}
+      //     Implementation
+      //   </div>,
+      //   key: "implementations",
+      //   children: <ImplementationView agentId={agent.id} models={models} collections={collections} skills={skills} agents={agents} />
+      // })
 
       if (agent.type && agent.type === "groupchat") {
         items.push({

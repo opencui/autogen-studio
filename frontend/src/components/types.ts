@@ -166,7 +166,7 @@ export interface ISkill {
 
 export interface ISignatureCompileRequest {
   agent_id?: number;
-  models: IModelConfig[];
+  models: (IModelConfig| null)[];
   training_sets: ICollection[];
   development_sets: ICollection[];
   prompt_strategy?: 'Predict' | 'ChainOfThought' | 'ReAct';
