@@ -358,7 +358,7 @@ class Collections(SQLModel, table=True):
     user_id: Optional[str] = None
     name: str
     description: str
-    schema_id: Optional[str] = None
+    schema_id: Optional[int] = None
 
 
 class CollectionRow(SQLModel, table=True):
