@@ -28,6 +28,7 @@ const BuildView = () => {
           tabBarStyle={{ paddingLeft: 0, marginLeft: 0 }}
           defaultActiveKey="4"
           tabPosition="left"
+          destroyInactiveTabPane
           items={[
             {
               label: (

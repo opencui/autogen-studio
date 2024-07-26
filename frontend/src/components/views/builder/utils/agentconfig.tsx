@@ -677,6 +677,11 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
     fetchCache();
   }, [])
 
+  console.log(agent);
+  console.log(collections);
+  console.log(333);
+  console.log(collections.filter(item => item.schema_id == agent.schema_id));
+
   return <div className="">
     <ControlRowView
       title="Model"
@@ -726,7 +731,7 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
         }}
       >
         {
-          collections.filter(item => item.schema_id === agent.schema_id).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+          collections.filter(item => item.schema_id == agent.schema_id).map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
         }
       </Select>}
       control={<Table

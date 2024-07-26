@@ -7,7 +7,7 @@ export interface IMessage {
   created_at?: string;
   updated_at?: string;
   session_id?: number;
-  connection_id?: string;
+  connection_id?: number;
   workflow_id?: number;
 }
 
@@ -116,7 +116,7 @@ export interface ICollection {
   created_at?: string;
   updated_at?: string;
   user_id?: string; // user.email
-  schema_id?: string;
+  schema_id?: number;
   table_name?: string; //不确定需不需要，如果需要应由后端生成确保唯一性，对应具体collection的table name
 }
 
@@ -166,7 +166,7 @@ export interface ISkill {
 
 export interface ISignatureCompileRequest {
   agent_id?: number;
-  models: (IModelConfig| null)[];
+  models: (IModelConfig | null)[];
   training_sets: ICollection[];
   development_sets: ICollection[];
   prompt_strategy?: 'Predict' | 'ChainOfThought' | 'ReAct';
