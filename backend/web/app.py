@@ -178,7 +178,7 @@ async def list_schema(user_id: str, schema_id: None | str = None):
     }
     if schema_id is not None:
         filters["id"] = schema_id
-        filters["isHide"] = True
+        del filters["isHide"]
     return list_entity(Schema, filters=filters)
 
 
