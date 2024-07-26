@@ -165,12 +165,13 @@ def compile_and_train(
     schema: Schema,
     skill: Skill,
     opt_type: OptimizerEnum,
+    opt_config: dict,
     model: Model,
     training_set: list,
     teacher: Model = None,
     label: str = "something_unique"
 ):
-    code = generate_module_for_train(strategy, schema, skill, opt_type.value, config)
+    code = generate_module_for_train(strategy, schema, skill, opt_type.value, opt_config)
     module = load_and_execute_code(code, module_name=label)
     lm = get_dspy_model(model)
     teacher = get_dspy_model(teacher) if teacher is not None else lm
