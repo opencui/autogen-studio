@@ -29,6 +29,7 @@ dependencies = [
     "jinja2",
     "pyautogen[gemini]>=0.2.0",
     "python-dotenv",
+    "pyjson5",
     "dspy-ai",
     "websockets",
     "numpy < 2.0.0",

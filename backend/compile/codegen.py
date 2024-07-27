@@ -6,6 +6,7 @@ import ast
 import astor
 import importlib
 import sys
+import pyjson5 as json5
 import dspy
 from typing import Tuple, Dict
 
@@ -15,8 +16,9 @@ from typing import Tuple, Dict
 # The inference.py will take model.json file and serve the llm functionality.
 # There are three different code gen tasks:
 # 1. training of the single signature/module. We need validation here.
-# 2. inference of the single signature/module.
-# 3. inference of many signatures/modules.
+# 2. evaluate the single signature/module.
+# 3. inference of the single signature/module for adhoc testing.
+# 4. inference of many signatures/modules for export.
 
 
 class FunctionNameExtractor(ast.NodeVisitor):
@@ -37,35 +39,6 @@ def extract_function_names(source_code):
     extractor = FunctionNameExtractor()
     extractor.visit(tree)
     return extractor.function_names
-
-
-class ImportsGenerator:
-    """register the """
-    def __init__(self):
-        self.imports = []
-    def add(self, package):
-        self.imports.append(package)
-
-    def __call__(self):
-        return self.template.render(packages=self.imports)
-
-
-class SignatureGenerator:
-    def __init__(
-            self,
-            strategy_value: str,
-            template: jinja2.Template,
-            opt_type: OptimizerEnum,
-            opt_config: Dict,
-    ):
-        self.strategy = strategy_value
-        self.template = template
-        self.opt_type = opt_type
-        self.opt_config = opt_config
-
-    def __call__(self, schema):
-        return self.template.render(
-            schema=schema, strategy=self.strategy, opt_type=self.opt_type, opt_config=str(self.opt_config))
 
 
 def split_imports(source_code):
@@ -96,7 +69,6 @@ def split_imports(source_code):
 
 # Ideally, we should generate the training code and execute it on the fly, as
 # there is no reason,
-
 def load_and_execute_code(code, module_name="generated_module"):
     # Create a module specification
     importlib.invalidate_caches()
@@ -113,6 +85,26 @@ def load_and_execute_code(code, module_name="generated_module"):
     exec(code, module.__dict__)
 
     return module
+
+
+
+class SignatureGenerator:
+    def __init__(
+            self,
+            strategy_value: str,
+            template: jinja2.Template,
+            opt_type: OptimizerEnum,
+            opt_config: Dict,
+    ):
+        self.strategy = strategy_value
+        self.template = template
+        self.opt_type = opt_type
+        self.opt_config = opt_config
+
+    def __call__(self, schema):
+        return self.template.render(
+            schema=schema, strategy=self.strategy, opt_type=self.opt_type, opt_config=str(self.opt_config))
+
 
 
 def generate_module_for_train(
@@ -181,13 +173,66 @@ def compile_and_train(
     optimizer = BootstrapFewShot(metric=module.metric, teacher_settings=teacher_config, **module.opt_config)
     implementation = optimizer.compile(module, trainset=training_set)
     implementation["module_type"] = opt_type.value
+    implementation["model"] = model.model
     return implementation
 
 
-# This generates the training code.
-def generte_fastapi(schemas: list[Schema], output_path):
+class EvaluationGenerator:
+    def __init__(self):
+        self.imports = ["import dspy"]
+
+        self.env = Environment(loader=FileSystemLoader('backend/compile/templates'))
+        self.codes = []
+        self.template0 = self.env.get_template("evaluate.py.tpl")
+
+    def gen_code(self, schema: Schema, strategy: PromptStrategyEnum, implementation: str, skill: Skill):
+        self.codes.append(
+            self.template1.render(
+                schema=schema,
+                strategy=strategy.value,
+                implementation=implementation,
+                skill=skill))
+
+    def gen_evaluate(self, eval: Skill):
+        imports0, codes0 = split_imports(eval.content)
+        self.imports.append(imports0)
+        self.codes.append(codes0)
+
+    # the module.eval, module.module can be used directly for evaluation.
+    def load(self, module_name="random"):
+        code = "\n\n".join(["\n".join(self.imports)] + self.codes)
+        module = load_and_execute_code(code, module_name)
+        return module
+
+
+# This generates the inference code that is served via FastAPI.
+class InferenceGenerator:
     """This will generate main.py as FastAPI app.py"""
-    None
+    def __init__(self):
+        self.imports = [
+            "import dspy",
+            "from fastapi import FastAPI",
+            "from pydantic import BaseModel"]
+
+        self.env = Environment(loader=FileSystemLoader('backend/compile/templates'))
+        self.codes = []
+        self.endpoints = []
+        self.template0 = self.env.get_template("infer.py.tpl")
+        self.template1 = self.env.get_template("endpoint.py.tpl")
+
+    def add_fun(self, schema: Schema, strategy: PromptStrategyEnum, implementation: str):
+        types = self.template0.render(schema=schema)
+        import0, code0 = split_imports(types)
+        self.imports.append(import0)
+        self.codes.append(code0)
+
+        endpoint = self.template1.render(schema=schema, strategy=strategy.value, implementation=implementation)
+        self.endpoints.append(endpoint)
+
+    def gen(self):
+        return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
+
+
 
 
 if __name__ == "__main__":
@@ -197,8 +242,8 @@ if __name__ == "__main__":
         "description": "desc schema1",
         "fields": [
             {"name": "k1", "description": "desc k1", "true_type": "int", "mode": "input", "prefix": "prefix1,xxxxxx"},
-            {"name": "k3", "description": "k3 prefix", "true_type": "any", "mode": "any", "prefix": "prefix3,zzz"},
-            {"name": "k2", "description": "k2 prefix", "true_type": "any", "mode": "output", "prefix": "prefix2,yyy"}
+            {"name": "k3", "description": "k3 prefix", "true_type": "str", "mode": "any", "prefix": "prefix3,zzz"},
+            {"name": "k2", "description": "k2 prefix", "true_type": "str", "mode": "output", "prefix": "prefix2,yyy"}
         ]}
 
     metric_dict = {
@@ -227,3 +272,44 @@ if __name__ == "__main__":
 
     module = load_and_execute_code(code, module_name="something_unique")
 
+    infer_gen = InferenceGenerator()
+    implstr = \
+r"""{
+  "self": {
+    "lm": null,
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "site": "providing data and insights for the global freight and logistics industry.",
+        "conversation": "\nuser: EPA",
+        "response": "The Environmental Protection Agency (EPA) recently fined Maritime International and its subsidiaries for violating federal laws related to the improper disposal of ammonia at facilities in Massachusetts and Connecticut.",
+        "rationale": "produce the rating. We need to evaluate whether the response addresses the user's query about the EPA. The user simply mentioned \"EPA,\" which is quite broad and could refer to any recent activity or news related to the Environmental Protection Agency. The response provided specific information about a recent fine imposed by the EPA on Maritime International and its subsidiaries for violating federal laws related to ammonia disposal. This is relevant and provides a specific recent action taken by the EPA, which aligns with the user's broad query.",
+        "rating": "Good",
+      },
+      {
+        "site": "providing data and insights for the global freight and logistics industry.",
+        "conversation": "\nuser: is Pete Buttigieg a good transporation secretary?\n \nbot: Pete Buttigieg has appointed Vinn White as the Federal Motor Carrier Safety Administration\u2019s deputy administrator.\nuser: what changes has he made?",
+        "response": "Pete Buttigieg has appointed Vinn White as the Federal Motor Carrier Safety Administration\u2019s deputy administrator, focusing on enhancing safety for all roadway users.",
+        "rating": "Good"
+      }
+    ],
+    "signature_instructions": "Evaluate the response based on whether the response addresses the last question in the conversation for the site.\nPlease rate the response in following levels:\n- Good: The response fully addresses the question, with accurate and relevant information.\n- Bad: The response does not address the question, provides incorrect information, or is irrelevant.\n- Neutral: The response partially addresses the question but lacks some necessary details or clarity",
+    "signature_prefix": "Rating[Good\/Bad\/Neutral]:",
+    "extended_signature_instructions": "Evaluate the response based on whether the response addresses the last question in the conversation for the site.\nPlease rate the response in following levels:\n- Good: The response fully addresses the question, with accurate and relevant information.\n- Bad: The response does not address the question, provides incorrect information, or is irrelevant.\n- Neutral: The response partially addresses the question but lacks some necessary details or clarity",
+    "extended_signature_prefix": "Rating[Good\/Bad\/Neutral]:"
+  }
+}"""
+    try:
+        implementation = json5.loads(implstr, strict=False)
+    except json5.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+        print(f"Error occurs at position {e.pos}")
+        print(f"The problematic part of the JSON:")
+        print(implstr[max(0, e.pos - 50):e.pos + 50])
+
+    infer_gen.add_fun(schema, PromptStrategyEnum.chain_of_thought, implementation)
+    code = infer_gen.gen()
+
+    print(code)
