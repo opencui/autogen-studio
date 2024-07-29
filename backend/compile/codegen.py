@@ -210,6 +210,14 @@ class EvaluationGenerator:
         return module
 
 
+def evaluate(schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Skill):
+    gen = EvaluationGenerator()
+    gen.gen_code(schema, strategy, implementation)
+    gen.gen_evaluate(evaluate)
+    module = gen.load()
+    return None
+
+
 # This generates the inference code that is served via FastAPI.
 class InferenceGenerator:
     """This will generate main.py as FastAPI app.py"""
