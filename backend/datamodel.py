@@ -3,6 +3,9 @@ from enum import Enum
 from types import NoneType
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
+import json
+from openai.types.chat.chat_completion_named_tool_choice_param import Function
+from sqlalchemy.types import TypeDecorator, String
 from pydantic_core.core_schema import int_schema
 from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy import ForeignKey, Integer, orm
@@ -21,6 +24,8 @@ from sqlmodel import (
 )
 
 SQLModel.model_config["protected_namespaces"] = ()
+SQLModel.model_config["arbitrary_types_allowed"] = True
+
 # pylint: disable=protected-access
 
 
@@ -200,6 +205,16 @@ class AgentLink(SQLModel, table=True):
     )
 
 
+class ListType(TypeDecorator):
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        return ""
+
+    def process_result_value(self, value, dialect):
+        return []
+
+
 class Agent(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -242,6 +257,7 @@ class Agent(SQLModel, table=True):
         ),
     )
     schema_id: Optional[int] = None
+    functions: Optional[List[Skill]] = Field(default=None, sa_column=Column(ListType))
 
 
 class WorkFlowType(str, Enum):

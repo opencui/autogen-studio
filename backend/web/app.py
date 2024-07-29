@@ -378,12 +378,29 @@ async def delete_model(model_id: int, user_id: str):
 async def list_agents(user_id: str):
     """List all agents for a user"""
     filters = {"user_id": user_id}
-    return list_entity(Agent, filters=filters)
+    result = list_entity(Agent, filters=filters, return_json=False)
+    for i in range(len(result.data)):
+        d = result.data[i]
+        d.functions = dbmanager.get_linked_entities("agent_skill", d.id).data
+        result.data[i] = d
+    return result
 
 
 @api.post("/agents")
 async def create_agent(agent: Agent):
     """Create a new agent"""
+    for o in dbmanager.get_linked_entities("agent_skill", agent.id).data:
+        dbmanager.unlink(
+            link_type="agent_skill", primary_id=agent.id, secondary_id=o.id
+        )
+    if agent.functions:
+        for o in agent.functions:
+            dbmanager.link(
+                link_type="agent_skill",
+                primary_id=agent.id,
+                secondary_id=o.get("id", None),
+            )
+
     return create_entity(agent, Agent)
 
 
