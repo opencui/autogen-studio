@@ -3,6 +3,7 @@ import { CollapseBox, ControlRowView } from "../../../atoms";
 import { checkAndSanitizeInput, fetchJSON, getServerUrl } from "../../../utils";
 import {
   Button,
+  Drawer,
   Form,
   Input,
   InputNumber,
@@ -27,7 +28,7 @@ import {
   ModelSelector,
   SkillSelector,
 } from "./selectors";
-import { IAgent, ICollection, IImplementation, ILLMConfig, IModelConfig, ISchema, ISignatureCompileRequest, ISkill } from "../../../types";
+import { IAgent, ICollection, IEvaluation, IImplementation, ILLMConfig, IModelConfig, ISchema, ISignatureCompileRequest, ISkill } from "../../../types";
 import TextArea from "antd/es/input/TextArea";
 import { cloneDeep } from "lodash";
 import { Agent } from "http";
@@ -591,12 +592,12 @@ export const AgentConfigView = ({
 
 export const AgentCompileView = ({ agentId, agent, models, collections, skills, agents }:
   {
-    agentId: number,
-    agent: IAgent,
-    models: IModelConfig[],
-    collections: ICollection[],
-    skills: ISkill[],
-    agents: IAgent[],
+    agentId: number;
+    agent: IAgent;
+    models: IModelConfig[];
+    collections: ICollection[];
+    skills: ISkill[];
+    agents: IAgent[];
   }) => {
 
   const serverUrl = getServerUrl();
@@ -983,23 +984,493 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
   </div>;
 }
 
-export const ImplementationView = ({ agentId, models, collections, skills, agents }:
+
+
+export const ImplementationDetail = ({ implementation, setImplementation, agentId, schema, collections, skills, agents }:
   {
-    agentId: number,
-    models: IModelConfig[],
-    collections: ICollection[],
-    skills: ISkill[],
-    agents: IAgent[],
+    implementation: IImplementation
+    setImplementation: (implementation: IImplementation | null) => void;
+    agentId: number;
+    schema: ISchema;
+    collections: ICollection[];
+    skills: ISkill[];
+    agents: IAgent[];
+  }) => {
+
+  const [data, setData] = React.useState<IImplementation>(implementation);
+  const [hasChanged, setHasChanged] = React.useState<boolean>(false);
+  const [evaluations, setEvaluations] = React.useState<IEvaluation[]>([]);
+  const [openAddEvaluation, setOpenAddEvaluation] = React.useState<boolean>(false);
+  const [addEvalueationCollectionId, setAddEvaluationCollectionId] = React.useState<number | null>(null);
+  const [addEvalueationMetricId, setAddEvaluationMetricId] = React.useState<number | null>(null);
+  const [addEvalueationMetricType, setAddEvaluationMetricType] = React.useState<'skill' | 'agent' | undefined>(undefined);
+  const [saveAsName, setSaveAsName] = React.useState<string>("");
+  const [selectedEvaluation, setSelectedEvaluation] = React.useState<IEvaluation | null>(null);
+  const [openDrawer, setOpenDrawer] = React.useState<boolean>(false);
+  const [testInputs, setTestInputs] = React.useState<{ [key: string]: string }>({});
+  const [testResult, setTestResult] = React.useState<{ [key: string]: string }>({});
+
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const serverUrl = getServerUrl();
+
+  const listEvaluationUrl = `${serverUrl}/evaluations?agent_id=${agentId}&implementation_id=${implementation.id}`;
+  const addEvaluationUrl = `${serverUrl}/evaluationss?`;
+  const copyImplemantationUrl = `${serverUrl}/implementations`
+
+  const fetchEvaluations = () => {
+    setLoading(true);
+    const payLoad = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setEvaluations(data.data);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(listEvaluationUrl, payLoad, onSuccess, onError);
+  };
+
+  const addEvaluation = (evaluation: IEvaluation) => {
+    setLoading(true);
+    const payLoad = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(evaluation),
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        fetchEvaluations();
+        setOpenAddEvaluation(false);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+
+      //for test
+      // setEvaluations([{
+      //   id: 555,
+      //   agent_id: agentId,
+      //   implementation_id: implementation.id,
+      //   metric_id: addEvalueationMetricId || undefined,
+      //   metric_type: addEvalueationMetricType,
+      //   collection: collections.find((item) => item.id === addEvalueationCollectionId) || undefined
+      // }]);
+
+    };
+    fetchJSON(addEvaluationUrl, payLoad, onSuccess, onError);
+  }
+
+  const test = () => {
+    setLoading(true);
+    const payLoad = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        implementation_id: implementation.id,
+        inputs: testInputs
+      }),
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setTestResult(data.data.result);
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(`${serverUrl}/implementations/test`, payLoad, onSuccess, onError);
+  }
+
+  const deleteEvaluation = (id: number) => {
+    const deleteEvaluationUrl = `${serverUrl}/evaluations/delete?evaluation_id=${id}`;
+    setLoading(true);
+    const payLoad = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        fetchEvaluations();
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(deleteEvaluationUrl, payLoad, onSuccess, onError);
+  }
+
+  const copyImplementation = (implementation: IImplementation, close: any) => {
+    delete (implementation.id);
+    setLoading(true);
+    const payLoad = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(implementation),
+    };
+
+    const onSuccess = (data: any) => {
+      if (data && data.status) {
+        setImplementation(data.data);
+        close();
+      } else {
+        message.error(data.message);
+      }
+      setLoading(false);
+    };
+    const onError = (err: any) => {
+      // setError(err);
+      message.error(err.message);
+      setLoading(false);
+    };
+    fetchJSON(copyImplemantationUrl, payLoad, onSuccess, onError);
+  }
+
+  React.useEffect(() => {
+    fetchEvaluations();
+  }, [implementation.id]);
+
+  return selectedEvaluation ? <EvaluationDetail evaluation={selectedEvaluation} setEvalueation={setSelectedEvaluation}
+    collections={collections} skills={skills} agents={agents} schema={schema}
+  />
+    : <div className="mb-2   relative">
+      <Drawer
+        title="Test"
+        extra={<Button onClick={() => {
+          test();
+        }}>
+          Execute
+        </Button>}
+        placement="right"
+        closable={false}
+        onClose={() => {
+          setOpenDrawer(false);
+        }} open={openDrawer}
+      >
+        <ControlRowView
+          title="Inputs"
+          className="mt-4"
+          description=""
+          value={""}
+          control={
+            <Table
+              dataSource={schema.fields}
+              columns={[{
+                title: "Name",
+                dataIndex: "name"
+              }, {
+                title: "Value",
+                dataIndex: [1],
+                render: (_, record) => {
+                  return <Input value={testInputs[record.name]} onChange={(e) => {
+                    testInputs[record.name] = e.target.value;
+                  }} />;
+                }
+              }]}
+              rowKey="name"
+            />
+          }
+        />
+        <ControlRowView
+          title="Result"
+          className="mt-4"
+          description=""
+          value={""}
+          control={
+            <Table
+              dataSource={schema.fields}
+              columns={[{
+                title: "Name",
+                dataIndex: "name"
+              }, {
+                title: "Value",
+                dataIndex: "",
+                render: (_, record) => {
+                  return <Input value={testResult[record.name]} />;
+                }
+              }]}
+              rowKey="name"
+            />
+          }
+        />
+      </Drawer>
+      <div className="     rounded  ">
+        <div className="flex mt-2 pb-2 mb-2 border-b space-between" >
+          <div className="flex-1 font-semibold mb-2 ">
+            <LeftOutlined onClick={() => {
+              setImplementation(null);
+            }} />
+            {" "}
+            <a>{data.name}</a>
+          </div>
+          <Button
+            type="primary"
+            onClick={() => {
+              setTestInputs({});
+              setTestResult({});
+              setOpenDrawer(!openDrawer);
+            }}>Test</Button>
+        </div>
+
+      </div>
+      <ControlRowView
+        title="Description"
+        className="mt-4"
+        description=""
+        value={""}
+        control={
+          <Input
+            className="mt-2"
+            placeholder="Please enter the description of the implementation"
+            value={data.description}
+            onChange={(e) => {
+              setData({
+                ...data,
+                description: e.target.value
+              });
+              setHasChanged(true);
+            }}
+          />}
+      />
+      <ControlRowView
+        title="Generated prompt"
+        className="mt-4"
+        description=""
+        value={""}
+        control={
+          <Input.TextArea
+            className="mt-2"
+            placeholder="Please edit the generated prompt of the implementation"
+            value={data.generated_prompt}
+            onChange={(e) => {
+              setData({
+                ...data,
+                generated_prompt: e.target.value
+              });
+              setHasChanged(true);
+            }}
+          />}
+      />
+
+      <ControlRowView
+        title="Evaluations"
+        className="mt-4"
+        description=""
+        value={""}
+        extra={<Button
+          type="primary"
+          onClick={() => {
+            setOpenAddEvaluation(true);
+            setAddEvaluationCollectionId(null);
+            setAddEvaluationMetricId(null);
+            setAddEvaluationMetricType(undefined);
+          }}>Add</Button>}
+        control={
+          <Table
+            dataSource={evaluations}
+            onRow={(record) => ({
+              onClick: () => {
+                setSelectedEvaluation(record);
+              }
+            })}
+            columns={[{
+              title: "Time",
+              dataIndex: "create_at"
+            }, {
+              title: "Collection",
+              dataIndex: ["collection", "name"]
+            }, {
+              title: "Metric",
+              dataIndex: "metric_id",
+              render: (metric_id, record, index) => {
+                if (record.metric_type === 'skill') {
+                  return skills.find(item => item.id === metric_id)?.name;
+                }
+
+                return agents.find(item => item.id === metric_id)?.config?.name;
+              }
+            }, {
+              dataIndex: "",
+              width: 50,
+              render: (_, record, index) => {
+                return <div className="hidden-cell">
+                  <DeleteOutlined
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      if (record.id) {
+                        deleteEvaluation(record.id);
+                      }
+                    }}
+                  />
+                </div>;
+              }
+            }]}
+            rowKey="id"
+          />
+        }
+      />
+      <div className="w-full mt-4 text-right">
+        {" "}
+        {!hasChanged && (
+          <Button
+            type="primary"
+            onClick={() => {
+              setSaveAsName(`${implementation.name}_copy`)
+              Modal.confirm({
+                title: "Save as a new implementation",
+                content: <div>
+                  <label>Name</label>
+                  <Input value={saveAsName}
+                    placeholder="new implementation name"
+                    onChange={(e) => {
+                      setSaveAsName(e.target.value);
+                    }}></Input>
+                </div>,
+                onOk: (close) => {
+                  copyImplementation({
+                    ...data,
+                    name: saveAsName
+                  }, close);
+                },
+                onCancel: (close) => {
+                  close();
+                }
+              })
+            }}
+            loading={loading}
+          >
+            {"Save as"}
+          </Button>
+        ) || ""}
+      </div>
+      <Modal title="Add an evaluation" open={openAddEvaluation}
+        onCancel={() => {
+          setOpenAddEvaluation(false);
+        }}
+        onOk={() => {
+          if (!addEvalueationCollectionId || !addEvalueationMetricId) {
+            message.error('Please select a collection and a metric');
+            return;
+          }
+
+          addEvaluation({
+            collection: collections.find(item => item.id === addEvalueationCollectionId),
+            metric_id: addEvalueationMetricId,
+            metric_type: addEvalueationMetricType,
+            implementation_id: implementation.id,
+            agent_id: agentId
+          });
+        }}
+      >
+        <ControlRowView
+          title="Collection"
+          className="mt-4"
+          description=""
+          value={""}
+          control={
+            <Select
+              value={addEvalueationCollectionId}
+              placeholder="Select a collection"
+              onChange={(value) => {
+                setAddEvaluationCollectionId(value);
+              }}
+            >
+              {
+                collections.map(item => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+              }
+            </Select>
+          }
+        />
+        <ControlRowView
+          title="Metric"
+          className="mt-4"
+          description=""
+          value={""}
+          control={
+            <Select
+              value={addEvalueationMetricId}
+              placeholder="Select a collection"
+              onChange={(value) => {
+                const seletedSkill = skills.find(item => item.id === value);
+                if (seletedSkill) {
+                  setAddEvaluationMetricId(value);
+                  setAddEvaluationMetricType('skill');
+                } else {
+                  setAddEvaluationMetricId(value);
+                  setAddEvaluationMetricType('agent');
+                }
+              }}
+            >
+              {
+                skills.map(item => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+              }
+              {
+                agents.map(item => <Select.Option key={item.id} value={item.id}>{item.config?.name}</Select.Option>)
+              }
+            </Select>
+          }
+        />
+      </Modal>
+    </div>;
+}
+
+export const ImplementationView = ({ agentId, models, collections, skills, agents, schemas }:
+  {
+    agentId: number;
+    models: IModelConfig[];
+    collections: ICollection[];
+    skills: ISkill[];
+    agents: IAgent[];
+    schemas: ISchema[];
   }) => {
 
   const serverUrl = getServerUrl();
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const [data, setData] = React.useState<IImplementation[]>([]);
+  const [selected, setSelected] = React.useState<IImplementation | null>(null);
 
 
   const listImplementationUrl = `${serverUrl}/implementations?agent_id=${agentId}`
-  const deleteImplementationUrl = `${serverUrl}/implementations/delete?agent_id=${agentId}`
 
   const fetchImplementations = () => {
     setLoading(true);
@@ -1027,6 +1498,9 @@ export const ImplementationView = ({ agentId, models, collections, skills, agent
   };
 
   const deleteImplementation = (id: number) => {
+
+    const deleteImplementationUrl = `${serverUrl}/implementations/delete?implementation_id=${id}`
+
     setLoading(true);
     const payLoad = {
       method: "DELETE",
@@ -1053,104 +1527,156 @@ export const ImplementationView = ({ agentId, models, collections, skills, agent
 
   React.useEffect(() => {
     fetchImplementations();
-  }, [])
 
-  return <div className="">
-    <Table
-      dataSource={data}
-      columns={[{
-        title: "Name",
-        dataIndex: "name"
-      }, {
-        title: "Description",
-        dataIndex: "description"
-      }, {
-        title: "Time",
-        dataIndex: "created_at"
-      }, {
-        dataIndex: "",
-        width: 50,
-        render: (_, record, index) => {
-          return <div className="hidden-cell">
-            <DeleteOutlined
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+    // for test
+    // setData([{
+    //   id: 1,
+    //   name: "Implementation 1",
+    //   description: "Implementation 1 description",
+    //   created_at: "2023-01-01 12:00:00",
+    //   agent_id: agentId,
+    //   generated_prompt: "Generated prompt",
+    // }]);
+  }, []);
 
-                if (record.id) {
-                  deleteImplementation(record.id);
-                }
-              }}
-            />
-          </div>;
-        }
-      }]}
-      rowKey="id"
-    />
-  </div>;
+  const getSchema = () => {
+    const agent = agents.find((item) => item.id === agentId);
+    return schemas.find((item) => item.id === agent?.schema_id);
+  }
+
+  return selected ? <ImplementationDetail
+    implementation={selected}
+    setImplementation={setSelected}
+    agentId={agentId}
+    schema={getSchema()!}
+    collections={collections}
+    skills={skills}
+    agents={agents}
+  />
+    : <div className="">
+      <Table
+        onRow={(record) => {
+          return {
+            onClick: (e: React.MouseEvent<HTMLTableRowElement>) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              setSelected(record);
+            },
+          };
+        }}
+        dataSource={data}
+        columns={[{
+          title: "Name",
+          dataIndex: "name"
+        }, {
+          title: "Description",
+          dataIndex: "description"
+        }, {
+          title: "Time",
+          dataIndex: "created_at"
+        }, {
+          dataIndex: "",
+          width: 50,
+          render: (_, record, index) => {
+            return <div className="hidden-cell">
+              <DeleteOutlined
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+
+                  if (record.id) {
+                    deleteImplementation(record.id);
+                  }
+                }}
+              />
+            </div>;
+          }
+        }]}
+        rowKey="id"
+      />
+    </div>;
 }
 
-export const ImplementationDetail = ({ implementation, agentId, models, collections, skills, agents }:
+export const EvaluationDetail = ({ evaluation, setEvalueation, collections, skills, agents, schema }:
   {
-    implementation: IImplementation
-    agentId: number,
-    models: IModelConfig[],
-    collections: ICollection[],
-    skills: ISkill[],
-    agents: IAgent[],
+    evaluation: IEvaluation;
+    setEvalueation: (evaluation: IEvaluation | null) => void;
+    collections: ICollection[];
+    skills: ISkill[];
+    agents: IAgent[];
+    schema: ISchema;
   }) => {
 
-  const [data, setData] = React.useState<IImplementation>(implementation);
+  const getMetricJson = () => {
+    if (evaluation.metric_type === 'skill') {
+      return JSON.stringify(skills.find(item => item.id === evaluation.metric_id), null, 2);
+    }
 
-  const [descEditing, setDescEditing] = React.useState<boolean>(false);
-  const [promptEditing, setPromptEditing] = React.useState<boolean>(false);
+    return JSON.stringify(agents.find(item => item.id === evaluation.metric_id), null, 2);
+  }
 
   return <div className="mb-2   relative">
     <div className="     rounded  ">
       <div className="flex mt-2 pb-2 mb-2 border-b">
         <div className="flex-1 font-semibold mb-2 ">
           <LeftOutlined onClick={() => {
-
+            setEvalueation(null);
           }} />
           {" "}
-          <a>{data.name}</a>
+          Evaluation detail
         </div>
       </div>
-      <Button>Test</Button>
     </div>
     <ControlRowView
-      title="Description"
+      title="Collection"
       className="mt-4"
       description=""
       value={""}
       control={
-        <Input
-          className="mt-2"
-          placeholder="Please enter the description of the implementation"
-          value={data.description}
-          onChange={(e) => {
-            setData({
-              ...data,
-              description: e.target.value
-            });
+        <Select
+          disabled
+          value={evaluation.collection?.id}
+        >
+          {
+            collections.map(item => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+          }
+        </Select>
+      }
+    />
+    <ControlRowView
+      title="Metric"
+      className="mt-4"
+      description=""
+      value={""}
+      control={
+        <pre>{
+          getMetricJson()
+        }</pre>
+      }
+    />
+    <ControlRowView
+      title="Result"
+      className="mt-4"
+      description=""
+      value={""}
+      control={
+        <Table
+          rowKey={(_, index) => {
+            return `${index}`;
           }}
-          readOnly={!descEditing}
-          suffix={!descEditing && <EditOutlined onClick={() => {
-            setDescEditing(true);
-          }}
-            onBlur={() => {
-              setDescEditing(false);
-            }}
-            onPressEnter={() => {
-              setDescEditing(false);
-            }}
-          />}
+          dataSource={evaluation.result}
+          columns={
+            schema.fields.map(field => ({
+              title: field.name,
+              dataIndex: field.name
+            }))
+          }
         />
       }
     />
   </div>
-};
-
+}
 
 export const AgentViewer = ({
   agent,
@@ -1206,14 +1732,14 @@ export const AgentViewer = ({
         children: <AgentCompileView agentId={agent.id} agent={agent} models={models} collections={collections} skills={skills} agents={agents} />
       })
 
-      // items.push({
-      //   label: <div className="w-full  ">
-      //     {" "}
-      //     Implementation
-      //   </div>,
-      //   key: "implementations",
-      //   children: <ImplementationView agentId={agent.id} models={models} collections={collections} skills={skills} agents={agents} />
-      // })
+      items.push({
+        label: <div className="w-full  ">
+          {" "}
+          Implementation
+        </div>,
+        key: "implementations",
+        children: <ImplementationView agentId={agent.id} models={models} collections={collections} skills={skills} agents={agents} schemas={schemas} />
+      })
 
       if (agent.type && agent.type === "groupchat") {
         items.push({

@@ -195,7 +195,10 @@ export interface IEvaluation {
   implementation_id?: number;
   id?: number;
   collection?: ICollection;
-  metric?: ISkill | IAgent;
+  metric_id?: number;
+  metric_type?: 'skill' | 'agent';
+  created_at?: string;
+  updated_at?: string;
 
   result?: { [key: string]: string }[];
 }
