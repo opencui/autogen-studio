@@ -1741,42 +1741,42 @@ export const AgentViewer = ({
         children: <ImplementationView agentId={agent.id} models={models} collections={collections} skills={skills} agents={agents} schemas={schemas} />
       })
 
-      if (agent.type && agent.type === "groupchat") {
-        items.push({
-          label: (
-            <div className="w-full  ">
-              {" "}
-              <UserGroupIcon className="h-4 w-4 inline-block mr-1" />
-              Agents
-            </div>
-          ),
-          key: "2",
-          children: <AgentSelector agentId={agent?.id} />,
-        });
-      }
+      // if (agent.type && agent.type === "groupchat") {
+      //   items.push({
+      //     label: (
+      //       <div className="w-full  ">
+      //         {" "}
+      //         <UserGroupIcon className="h-4 w-4 inline-block mr-1" />
+      //         Agents
+      //       </div>
+      //     ),
+      //     key: "2",
+      //     children: <AgentSelector agentId={agent?.id} />,
+      //   });
+      // }
 
-      items.push({
-        label: (
-          <div className="w-full  ">
-            {" "}
-            <CpuChipIcon className="h-4 w-4 inline-block mr-1" />
-            Models
-          </div>
-        ),
-        key: "3",
-        children: <ModelSelector agentId={agent?.id} />,
-      });
+      // items.push({
+      //   label: (
+      //     <div className="w-full  ">
+      //       {" "}
+      //       <CpuChipIcon className="h-4 w-4 inline-block mr-1" />
+      //       Models
+      //     </div>
+      //   ),
+      //   key: "3",
+      //   children: <ModelSelector agentId={agent?.id} />,
+      // });
 
-      items.push({
-        label: (
-          <>
-            <BugAntIcon className="h-4 w-4 inline-block mr-1" />
-            Skills
-          </>
-        ),
-        key: "4",
-        children: <SkillSelector agentId={agent?.id} />,
-      });
+      // items.push({
+      //   label: (
+      //     <>
+      //       <BugAntIcon className="h-4 w-4 inline-block mr-1" />
+      //       Skills
+      //     </>
+      //   ),
+      //   key: "4",
+      //   children: <SkillSelector agentId={agent?.id} />,
+      // });
     }
   }
 
