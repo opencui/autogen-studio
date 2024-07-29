@@ -174,7 +174,12 @@ def compile_and_train(
     implementation = optimizer.compile(module, trainset=training_set)
     implementation["module_type"] = opt_type.value
     implementation["model"] = model.model
-    return implementation
+
+    infer_gen = InferenceGenerator()
+    infer_gen.add_fun(schema, strategy, implementation)
+    infer_code = infer_gen.gen()
+
+    return implementation, infer_code
 
 
 class EvaluationGenerator:
