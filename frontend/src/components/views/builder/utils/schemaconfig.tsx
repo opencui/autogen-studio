@@ -248,11 +248,13 @@ const SchemaConfigMainView = ({
               name: "",
               description: "",
               true_type: "any",
-              mode: "any"
+              mode: "any",
+              prefix: ""
             });
           }}>Add</Button>}
         control={
           <Table
+            pagination={false}
             dataSource={schemaConfig.fields}
             onRow={(_, index) => {
               return {

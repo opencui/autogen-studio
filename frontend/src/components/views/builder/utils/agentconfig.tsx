@@ -89,7 +89,7 @@ export const AgentConfigView = ({
     max_tokens: 1000,
   };
 
-  const createAgent = (agent: IAgent) => {
+  const saveAgent = (agent: IAgent) => {
     setError(null);
     setLoading(true);
 
@@ -108,6 +108,7 @@ export const AgentConfigView = ({
         message.success(data.message);
         console.log("agents", data.data);
         const newAgent = data.data;
+        console.log(newAgent);
         setAgent(newAgent);
       } else {
         message.error(data.message);
@@ -213,6 +214,7 @@ export const AgentConfigView = ({
                     title: "Description",
                     dataIndex: "description"
                   }]}
+                  pagination={false}
                   rowKey="id"
                 />
               }
@@ -241,7 +243,7 @@ export const AgentConfigView = ({
                 >
                   {
                     skills.map((opt) =>
-                      <Select.Option key={opt.id} value={opt.id}>
+                      <Select.Option key={opt.id} value={opt.id} disabled={agent.functions?.findIndex((item) => item.id === opt.id) !== -1}>
                         {
                           opt.name
                         }
@@ -251,6 +253,7 @@ export const AgentConfigView = ({
               }
               control={
                 <Table
+                  pagination={false}
                   dataSource={agent.functions}
                   columns={[{
                     title: "Name",
@@ -567,7 +570,7 @@ export const AgentConfigView = ({
           <Button
             type="primary"
             onClick={() => {
-              createAgent(agent);
+              saveAgent(agent);
               setAgent(agent);
             }}
             loading={loading}
@@ -737,6 +740,7 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
       </Select>}
       control={<Table
         rowKey="id"
+        pagination={false}
         dataSource={data.training_sets}
         columns={[{
           title: "Name",
@@ -791,6 +795,7 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
       </Select>}
       control={<Table
         rowKey="id"
+                          pagination={false}
         dataSource={data.development_sets}
         columns={[{
           title: "Name",
@@ -1191,6 +1196,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           value={""}
           control={
             <Table
+              pagination={false}
               dataSource={schema.fields}
               columns={[{
                 title: "Name",
@@ -1216,6 +1222,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           control={
             <Table
               dataSource={schema.fields}
+              pagination={false}
               columns={[{
                 title: "Name",
                 dataIndex: "name"
@@ -1304,6 +1311,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           }}>Add</Button>}
         control={
           <Table
+            pagination={false}
             dataSource={evaluations}
             onRow={(record) => ({
               onClick: () => {
@@ -1555,6 +1563,7 @@ export const ImplementationView = ({ agentId, models, collections, skills, agent
   />
     : <div className="">
       <Table
+        pagination={false}
         onRow={(record) => {
           return {
             onClick: (e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -1662,6 +1671,7 @@ export const EvaluationDetail = ({ evaluation, setEvalueation, collections, skil
       value={""}
       control={
         <Table
+          pagination={false}
           rowKey={(_, index) => {
             return `${index}`;
           }}

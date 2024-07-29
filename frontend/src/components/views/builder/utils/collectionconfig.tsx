@@ -276,6 +276,7 @@ const CollectionConfigMainView = ({
           }}>Add</Button>}
         control={
           <Table
+          pagination={false}
             dataSource={data}
             rowKey="id"
             onRow={(_, index) => {
