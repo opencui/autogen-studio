@@ -401,7 +401,14 @@ async def create_agent(agent: Agent):
                 secondary_id=o.get("id", None),
             )
 
-    return create_entity(agent, Agent)
+    result = create_entity(agent, Agent)
+    data = result.get("data", {})
+    data["functions"] = dbmanager.get_linked_entities(
+        "agent_skill", data.get("id")
+    ).data
+
+    result["data"] = data
+    return result
 
 
 @api.delete("/agents/delete")
