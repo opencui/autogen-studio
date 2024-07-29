@@ -235,6 +235,7 @@ class InferenceGenerator:
         self.endpoints.append(endpoint)
 
     def gen(self):
+        self.codes.append("app = FastAPI()")
         return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
 
 
