@@ -18,6 +18,8 @@ from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
 
+# from backend.compile.codegen import SignatureGenerator
+
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
 from ..database import workflow_from_id
@@ -35,6 +37,7 @@ from ..datamodel import (
     Collections,
     CollectionRow,
     Implementation,
+    SignatureCompileRequest,
 )
 from ..utils import (
     check_and_cast_datetime_fields,
@@ -243,7 +246,7 @@ async def create_or_update_collections(
                 )
 
                 fields: List[SchemaField] = [
-                    SchemaField(name=s, description=s).dict() for s in buf
+                    SchemaField(name=s, description=s, prefix="").dict() for s in buf
                 ]
 
                 schema = Schema(
@@ -305,6 +308,29 @@ async def delete_collection_row(collection_id: int, row_id: int):
     """Delete a collection_row"""
     filters = {"id": row_id, "collection_id": collection_id}
     return delete_entity(CollectionRow, filters=filters)
+
+
+@api.get("/implementations/request_cache")
+async def get_complie(agent_id: str):
+    return {}
+
+
+@api.post("/implementations/compile")
+async def create_implementation_complie(body: SignatureCompileRequest):
+    data = create_entity(body, SignatureCompileRequest, {})
+
+    models = data.get("data", {}).get("models", [])
+    data["data"]["models"] = [
+        dbmanager.get(Model, filters={"id": o}).data if o is not None else None
+        for o in models
+    ]
+
+    training_sets = data.get("data", {}).get("training_sets", [])
+    data["data"]["training_sets"] = [
+        dbmanager.get(Collections, filters={"id": o}).data if o is not None else None
+        for o in training_sets
+    ]
+    return data
 
 
 @api.get("/implementation")

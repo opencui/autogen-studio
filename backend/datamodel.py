@@ -214,6 +214,29 @@ class ListType(TypeDecorator):
     def process_result_value(self, value, dialect):
         return []
 
+    impl = String
+
+
+class ArrayType(TypeDecorator):
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        data = []
+        if value is not None:
+            data = [o.get("id") if o is not None else None for o in value]
+
+        return json.dumps(data)
+
+    def process_result_value(self, value, dialect):
+        data = []
+
+        if value is not None:
+            try:
+                data = json.loads(value)
+            except:
+                pass
+        return data
+
 
 class Agent(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
@@ -405,13 +428,23 @@ class OptimizerEnum(str, Enum):
     bootstrap_few_shot_with_optuna_knnfewshot = "BootstrapFewShotWithOptuna, KNNFewShot"
 
 
-class SignatureCompileRequest(SQLModel, table=False):
-    agent_id: int
-    config_list: List[Any] = Field(default_factory=list)
+class SignatureCompileRequest(SQLModel, table=True):
+    __table_args__ = {"sqlite_autoincrement": True}
+    id: Optional[int] = Field(default=None, primary_key=True)
+    created_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
+    )
 
-    model: List[int] = Field(default_factory=list)
-    training_sets: List[int] = Field(default_factory=list)
-    development_sets: List[int] = Field(default_factory=list)
+    agent_id: int
+    models: List[Model] = Field(default=[], sa_column=Column(ArrayType))
+    training_sets: List[Collections] = Field(default=[], sa_column=Column(ArrayType))
+    development_sets: List[Collections] = Field(default=[], sa_column=Column(ArrayType))
+
     prompt_strategy: PromptStrategyEnum = Field(
         default=PromptStrategyEnum.predict,
         sa_column=Column(SqlEnum(PromptStrategyEnum)),
