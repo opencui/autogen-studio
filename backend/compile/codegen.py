@@ -87,14 +87,13 @@ def load_and_execute_code(code, module_name="generated_module"):
     return module
 
 
-
 class SignatureGenerator:
     def __init__(
-            self,
-            strategy_value: str,
-            template: jinja2.Template,
-            opt_type: OptimizerEnum,
-            opt_config: Dict,
+        self,
+        strategy_value: str,
+        template: jinja2.Template,
+        opt_type: OptimizerEnum,
+        opt_config: Dict,
     ):
         self.strategy = strategy_value
         self.template = template
@@ -103,16 +102,20 @@ class SignatureGenerator:
 
     def __call__(self, schema):
         return self.template.render(
-            schema=schema, strategy=self.strategy, opt_type=self.opt_type, opt_config=str(self.opt_config))
-
+            schema=schema,
+            strategy=self.strategy,
+            opt_type=self.opt_type,
+            opt_config=str(self.opt_config),
+        )
 
 
 def generate_module_for_train(
-        strategy: PromptStrategyEnum,
-        schema: Schema,
-        skill: Skill,
-        opt_type: str,
-        opt_config=None):
+    strategy: PromptStrategyEnum,
+    schema: Schema,
+    skill: Skill,
+    opt_type: str,
+    opt_config=None,
+):
     """
     This will generate two files {{schame.name}}_train.py and {{schema.name}}_inference.py under output_path
     Need to make sure the skill.name is the referenced in the training.
@@ -133,9 +136,11 @@ def generate_module_for_train(
         return False, "metric function is not presented"
 
     # Now we generate both metric function and signature and training
-    env = Environment(loader=FileSystemLoader('backend/compile/templates'))
+    env = Environment(loader=FileSystemLoader("backend/compile/templates"))
     template = env.get_template("signature.py.tpl")
-    generate_signature = SignatureGenerator(strategy.value, template, opt_type, opt_config)
+    generate_signature = SignatureGenerator(
+        strategy.value, template, opt_type, opt_config
+    )
 
     code = generate_signature(schema)
     print(code)
@@ -161,16 +166,20 @@ def compile_and_train(
     model: Model,
     training_set: list,
     teacher: Model = None,
-    label: str = "something_unique"
+    label: str = "something_unique",
 ):
-    code = generate_module_for_train(strategy, schema, skill, opt_type.value, opt_config)
+    code = generate_module_for_train(
+        strategy, schema, skill, opt_type.value, opt_config
+    )
     module = load_and_execute_code(code, module_name=label)
     lm = get_dspy_model(model)
     teacher = get_dspy_model(teacher) if teacher is not None else lm
 
     dspy.settings.configure(lm=lm)
     teacher_config = {"lm": teacher}
-    optimizer = BootstrapFewShot(metric=module.metric, teacher_settings=teacher_config, **module.opt_config)
+    optimizer = BootstrapFewShot(
+        metric=module.metric, teacher_settings=teacher_config, **module.opt_config
+    )
     implementation = optimizer.compile(module, trainset=training_set)
     implementation["module_type"] = opt_type.value
     implementation["model"] = model.model
@@ -186,17 +195,25 @@ class EvaluationGenerator:
     def __init__(self):
         self.imports = ["import dspy"]
 
-        self.env = Environment(loader=FileSystemLoader('backend/compile/templates'))
+        self.env = Environment(loader=FileSystemLoader("backend/compile/templates"))
         self.codes = []
         self.template0 = self.env.get_template("evaluate.py.tpl")
 
-    def gen_code(self, schema: Schema, strategy: PromptStrategyEnum, implementation: str, skill: Skill):
+    def gen_code(
+        self,
+        schema: Schema,
+        strategy: PromptStrategyEnum,
+        implementation: str,
+        skill: Skill,
+    ):
         self.codes.append(
             self.template1.render(
                 schema=schema,
                 strategy=strategy.value,
                 implementation=implementation,
-                skill=skill))
+                skill=skill,
+            )
+        )
 
     def gen_evaluate(self, eval: Skill):
         imports0, codes0 = split_imports(eval.content)
@@ -210,7 +227,9 @@ class EvaluationGenerator:
         return module
 
 
-def evaluate(schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Skill):
+def evaluate(
+    schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Skill
+):
     gen = EvaluationGenerator()
     gen.gen_code(schema, strategy, implementation)
     gen.gen_evaluate(evaluate)
@@ -221,32 +240,36 @@ def evaluate(schema: Schema, strategy: PromptStrategyEnum, implementation: str, 
 # This generates the inference code that is served via FastAPI.
 class InferenceGenerator:
     """This will generate main.py as FastAPI app.py"""
+
     def __init__(self):
         self.imports = [
             "import dspy",
             "from fastapi import FastAPI",
-            "from pydantic import BaseModel"]
+            "from pydantic import BaseModel",
+        ]
 
-        self.env = Environment(loader=FileSystemLoader('backend/compile/templates'))
+        self.env = Environment(loader=FileSystemLoader("backend/compile/templates"))
         self.codes = []
         self.endpoints = []
         self.template0 = self.env.get_template("infer.py.tpl")
         self.template1 = self.env.get_template("endpoint.py.tpl")
 
-    def add_fun(self, schema: Schema, strategy: PromptStrategyEnum, implementation: str):
+    def add_fun(
+        self, schema: Schema, strategy: PromptStrategyEnum, implementation: str
+    ):
         types = self.template0.render(schema=schema)
         import0, code0 = split_imports(types)
         self.imports.append(import0)
         self.codes.append(code0)
 
-        endpoint = self.template1.render(schema=schema, strategy=strategy.value, implementation=implementation)
+        endpoint = self.template1.render(
+            schema=schema, strategy=strategy.value, implementation=implementation
+        )
         self.endpoints.append(endpoint)
 
     def gen(self):
         self.codes.append("app = FastAPI()")
         return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
-
-
 
 
 if __name__ == "__main__":
@@ -255,10 +278,29 @@ if __name__ == "__main__":
         "name": "schema1",
         "description": "desc schema1",
         "fields": [
-            {"name": "k1", "description": "desc k1", "true_type": "int", "mode": "input", "prefix": "prefix1,xxxxxx"},
-            {"name": "k3", "description": "k3 prefix", "true_type": "str", "mode": "any", "prefix": "prefix3,zzz"},
-            {"name": "k2", "description": "k2 prefix", "true_type": "str", "mode": "output", "prefix": "prefix2,yyy"}
-        ]}
+            {
+                "name": "k1",
+                "description": "desc k1",
+                "true_type": "int",
+                "mode": "input",
+                "prefix": "prefix1,xxxxxx",
+            },
+            {
+                "name": "k3",
+                "description": "k3 prefix",
+                "true_type": "str",
+                "mode": "any",
+                "prefix": "prefix3,zzz",
+            },
+            {
+                "name": "k2",
+                "description": "k2 prefix",
+                "true_type": "str",
+                "mode": "output",
+                "prefix": "prefix2,yyy",
+            },
+        ],
+    }
 
     metric_dict = {
         "id": 1,
@@ -266,11 +308,11 @@ if __name__ == "__main__":
         "updated_at": "2024-07-24T07:36:37.289537",
         "user_id": "guestuser@gmail.com",
         "name": "generate_images",
-        "content": "\nfrom typing import List\nimport uuid\nimport requests  # to perform HTTP requests\nfrom pathlib import Path\n\nfrom openai import OpenAI\n\n\ndef generate_images(query: str, image_size: str = \"1024x1024\") -> List[str]:\n    \"\"\"\n    Function to paint, draw or illustrate images based on the users query or request. Generates images from a given query using OpenAI's DALL-E model and saves them to disk.  Use the code below anytime there is a request to create an image.\n\n    :param query: A natural language description of the image to be generated.\n    :param image_size: The size of the image to be generated. (default is \"1024x1024\")\n    :return: A list of filenames for the saved images.\n    \"\"\"\n\n    client = OpenAI()  # Initialize the OpenAI client\n    response = client.images.generate(model=\"dall-e-3\", prompt=query, n=1, size=image_size)  # Generate images\n\n    # List to store the file names of saved images\n    saved_files = []\n\n    # Check if the response is successful\n    if response.data:\n        for image_data in response.data:\n            # Generate a random UUID as the file name\n            file_name = str(uuid.uuid4()) + \".png\"  # Assuming the image is a PNG\n            file_path = Path(file_name)\n\n            img_url = image_data.url\n            img_response = requests.get(img_url)\n            if img_response.status_code == 200:\n                # Write the binary content to a file\n                with open(file_path, \"wb\") as img_file:\n                    img_file.write(img_response.content)\n                    print(f\"Image saved to {file_path}\")\n                    saved_files.append(str(file_path))\n            else:\n                print(f\"Failed to download the image from {img_url}\")\n    else:\n        print(\"No image data found in the response!\")\n\n    # Return the list of saved files\n    return saved_files\n\n\n# Example usage of the function:\n# generate_and_save_images(\"A cute baby sea otter\")\n",
+        "content": '\nfrom typing import List\nimport uuid\nimport requests  # to perform HTTP requests\nfrom pathlib import Path\n\nfrom openai import OpenAI\n\n\ndef generate_images(query: str, image_size: str = "1024x1024") -> List[str]:\n    """\n    Function to paint, draw or illustrate images based on the users query or request. Generates images from a given query using OpenAI\'s DALL-E model and saves them to disk.  Use the code below anytime there is a request to create an image.\n\n    :param query: A natural language description of the image to be generated.\n    :param image_size: The size of the image to be generated. (default is "1024x1024")\n    :return: A list of filenames for the saved images.\n    """\n\n    client = OpenAI()  # Initialize the OpenAI client\n    response = client.images.generate(model="dall-e-3", prompt=query, n=1, size=image_size)  # Generate images\n\n    # List to store the file names of saved images\n    saved_files = []\n\n    # Check if the response is successful\n    if response.data:\n        for image_data in response.data:\n            # Generate a random UUID as the file name\n            file_name = str(uuid.uuid4()) + ".png"  # Assuming the image is a PNG\n            file_path = Path(file_name)\n\n            img_url = image_data.url\n            img_response = requests.get(img_url)\n            if img_response.status_code == 200:\n                # Write the binary content to a file\n                with open(file_path, "wb") as img_file:\n                    img_file.write(img_response.content)\n                    print(f"Image saved to {file_path}")\n                    saved_files.append(str(file_path))\n            else:\n                print(f"Failed to download the image from {img_url}")\n    else:\n        print("No image data found in the response!")\n\n    # Return the list of saved files\n    return saved_files\n\n\n# Example usage of the function:\n# generate_and_save_images("A cute baby sea otter")\n',
         "description": "Generate and save images based on a user's query.",
         "secrets": {},
-        "libraries": {}
-        }
+        "libraries": {},
+    }
 
     schema = Schema(**schema_dict)
     skill = Skill(**metric_dict)
@@ -287,8 +329,7 @@ if __name__ == "__main__":
     module = load_and_execute_code(code, module_name="something_unique")
 
     infer_gen = InferenceGenerator()
-    implstr = \
-r"""{
+    implstr = r"""{
   "self": {
     "lm": null,
     "traces": [],
@@ -321,7 +362,7 @@ r"""{
         print(f"Error parsing JSON: {e}")
         print(f"Error occurs at position {e.pos}")
         print(f"The problematic part of the JSON:")
-        print(implstr[max(0, e.pos - 50):e.pos + 50])
+        print(implstr[max(0, e.pos - 50) : e.pos + 50])
 
     infer_gen.add_fun(schema, PromptStrategyEnum.chain_of_thought, implementation)
     code = infer_gen.gen()

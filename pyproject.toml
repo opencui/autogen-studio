@@ -24,7 +24,6 @@ dependencies = [
     "typer",
     "uvicorn",
     "arxiv",
-    "ast",
     "astor",
     "jinja2",
     "pyautogen[gemini]>=0.2.0",

@@ -14,11 +14,12 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from openai import OpenAIError
 from pydantic_core import SchemaValidator
+from sqlalchemy.sql import label
 from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
 
-# from backend.compile.codegen import SignatureGenerator
+from backend.compile.codegen import compile_and_train
 
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
@@ -28,6 +29,7 @@ from ..datamodel import (
     Agent,
     Message,
     Model,
+    PromptStrategyEnum,
     Response,
     Session,
     Skill,
@@ -38,6 +40,7 @@ from ..datamodel import (
     CollectionRow,
     Implementation,
     SignatureCompileRequest,
+    OptimizerEnum,
 )
 from ..utils import (
     check_and_cast_datetime_fields,
@@ -321,7 +324,7 @@ async def create_implementation_complie(body: SignatureCompileRequest):
 
     models = data.get("data", {}).get("models", [])
     data["data"]["models"] = [
-        dbmanager.get(Model, filters={"id": o}).data if o is not None else None
+        dbmanager.get(Model, filters={"id": o}).data[0] if o is not None else None
         for o in models
     ]
 
@@ -330,6 +333,30 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         dbmanager.get(Collections, filters={"id": o}).data if o is not None else None
         for o in training_sets
     ]
+    print(data)
+
+    try:
+        agent = dbmanager.get(Agent, filters={"id": body.agent_id}).data[0]
+        skills = dbmanager.get_linked_entities("agent_skill", agent.id).data
+
+        schema_id = agent.schema_id
+        schema = dbmanager.get(Schema, filters={"id": schema_id}).data[0]
+    except:
+        return
+
+    args = {
+        "strategy": body.prompt_strategy,
+        "schema": schema,
+        "skill": None if len(skills) == 0 else skills[0],
+        "opt_type": OptimizerEnum(body.optimizer),
+        "opt_config": {},
+        "model": data["data"]["models"][0],
+        "training_set": body.training_sets,
+        "teacher": data["data"]["models"][1],
+    }
+    print("args", args)
+    compile_and_train(**args)
+
     return data
 
 
