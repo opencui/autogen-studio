@@ -322,10 +322,23 @@ async def delete_collection_row(collection_id: int, row_id: int):
 async def get_complie(agent_id: str):
     filters = {"agent_id": agent_id}
     resp = list_entity(SignatureCompileRequest, filters=filters, limit=1)
+
     if resp.data and len(resp.data) >= 1:
         resp.data = resp.data[0]
     else:
         resp.data = None
+
+    if resp.data is not None:
+        resp.data["models"] = [
+            dbmanager.get(Model, filters={"id": o}).data[0] if o is not None else None
+            for o in resp.data["models"]
+        ]
+        resp.data["training_sets"] = [
+            dbmanager.get(Collections, filters={"id": o}).data[0]
+            if o is not None
+            else None
+            for o in resp.data["training_sets"]
+        ]
 
     return resp
 
@@ -371,13 +384,24 @@ async def create_implementation_complie(body: SignatureCompileRequest):
     return data
 
 
-@api.get("/implementation")
+@api.get("/implementations")
 async def list_implementation(agent_id: None | int = None):
     filters = {}
     if agent_id is not None:
         filters["agent_id"] = agent_id
 
     return list_entity(Implementation, filters=filters)
+
+
+@api.post("/implementations")
+async def create_implementation(body: Implementation):
+    return create_entity(body, Implementation)
+
+
+@api.delete("/implementations/delete")
+async def delete_implementation(implementation_id: int):
+    filters = {"id": implementation_id}
+    return delete_entity(Implementation, filters=filters)
 
 
 @api.get("/skills")
