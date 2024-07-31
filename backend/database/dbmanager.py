@@ -93,6 +93,7 @@ class DBManager:
         filters: dict = None,
         return_json: bool = False,
         order: str = "desc",
+        limit: int | None = None,
     ):
         """List all entities"""
         result = []
@@ -113,6 +114,9 @@ class DBManager:
                         statement = statement.order_by(model_class.created_at.asc())
             else:
                 statement = select(model_class)
+
+            if limit is not None:
+                statement = statement.limit(limit)
 
             if return_json:
                 result = [
@@ -140,11 +144,14 @@ class DBManager:
         filters: dict = None,
         return_json: bool = False,
         order: str = "desc",
+        limit: int | None = None,
     ):
         """List all entities"""
 
         with Session(self.engine) as session:
-            response = self.get_items(model_class, session, filters, return_json, order)
+            response = self.get_items(
+                model_class, session, filters, return_json, order, limit
+            )
         return response
 
     def delete(self, model_class: SQLModel, filters: dict = None):

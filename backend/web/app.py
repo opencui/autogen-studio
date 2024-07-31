@@ -162,10 +162,15 @@ def list_entity(
     filters: dict = None,
     return_json: bool = True,
     order: str = "desc",
+    limit: int | None = None,
 ):
     """List all entities for a user"""
     return dbmanager.get(
-        model_class, filters=filters, return_json=return_json, order=order
+        model_class,
+        filters=filters,
+        return_json=return_json,
+        order=order,
+        limit=limit,
     )
 
 
@@ -315,7 +320,14 @@ async def delete_collection_row(collection_id: int, row_id: int):
 
 @api.get("/implementations/request_cache")
 async def get_complie(agent_id: str):
-    return {}
+    filters = {"agent_id": agent_id}
+    resp = list_entity(SignatureCompileRequest, filters=filters, limit=1)
+    if resp.data and len(resp.data) >= 1:
+        resp.data = resp.data[0]
+    else:
+        resp.data = None
+
+    return resp
 
 
 @api.post("/implementations/compile")
