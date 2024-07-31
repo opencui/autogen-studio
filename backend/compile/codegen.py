@@ -148,7 +148,6 @@ def generate_module_for_train(
     imports1, code1 = split_imports(code)
 
     code2 = f"metric = {skill.name}"
-
     return "\n\n".join([imports0, imports1, code0, code1, code2])
 
 

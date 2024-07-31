@@ -330,7 +330,7 @@ async def create_implementation_complie(body: SignatureCompileRequest):
 
     training_sets = data.get("data", {}).get("training_sets", [])
     data["data"]["training_sets"] = [
-        dbmanager.get(Collections, filters={"id": o}).data if o is not None else None
+        dbmanager.get(Collections, filters={"id": o}).data[0] if o is not None else None
         for o in training_sets
     ]
     print(data)
@@ -350,9 +350,8 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         "skill": None if len(skills) == 0 else skills[0],
         "opt_type": OptimizerEnum(body.optimizer),
         "opt_config": {},
+        "training_set": data["data"]["training_sets"],
         "model": data["data"]["models"][0],
-        "training_set": body.training_sets,
-        "teacher": data["data"]["models"][1],
     }
     print("args", args)
     compile_and_train(**args)
