@@ -168,19 +168,26 @@ def compile_and_train(
     teacher: Model = None,
     label: str = "something_unique",
 ):
+    print(f"teacher = {teacher}")
     code = generate_module_for_train(
         strategy, schema, skill, opt_type.value, opt_config
     )
     module = load_and_execute_code(code, module_name=label)
-    lm = get_dspy_model(model)
-    teacher = get_dspy_model(teacher) if teacher is not None else lm
 
+    if teacher is not None:
+        print(f"teacher = {teacher}")
+        teacher_lm = get_dspy_model(teacher)
+        teacher_config = {"lm": teacher_lm}
+        optimizer = BootstrapFewShot(
+            metric=module.metric, teacher_settings=teacher_config
+        )
+    else:
+        optimizer = BootstrapFewShot(metric=module.metric)
+
+    lm = get_dspy_model(model)
     dspy.settings.configure(lm=lm)
-    teacher_config = {"lm": teacher}
-    optimizer = BootstrapFewShot(
-        metric=module.metric, teacher_settings=teacher_config, **module.opt_config
-    )
-    implementation = optimizer.compile(module, trainset=training_set)
+
+    implementation = {}  # optimizer.compile(module, trainset=training_set)
     implementation["module_type"] = opt_type.value
     implementation["model"] = model.model
 
