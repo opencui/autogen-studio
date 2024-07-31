@@ -26,7 +26,7 @@ import {
   MonacoEditor,
 } from "../../atoms";
 
-const SkillsView = ({}: any) => {
+const SkillsView = ({ }: any) => {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<IStatus | null>({
     status: true,
@@ -94,7 +94,6 @@ const SkillsView = ({}: any) => {
     const onSuccess = (data: any) => {
       if (data && data.status) {
         // message.success(data.message);
-        console.log("skills", data.data);
         setSkills(data.data);
       } else {
         message.error(data.message);

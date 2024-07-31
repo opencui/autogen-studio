@@ -236,11 +236,9 @@ const CollectionConfigMainView = ({
     fetchData();
     if (collection.schema_id) {
       fetchSchema();
-      console.log(schema);
     }
   }, [collection])
-  console.log("collection:", collection)
-  console.log(schema);
+
   return (
     <div className="relative ">
       <RowModal
@@ -276,7 +274,7 @@ const CollectionConfigMainView = ({
           }}>Add</Button>}
         control={
           <Table
-          pagination={false}
+            pagination={false}
             dataSource={data}
             rowKey="id"
             onRow={(_, index) => {

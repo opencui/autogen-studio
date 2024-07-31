@@ -106,9 +106,8 @@ export const AgentConfigView = ({
     const onSuccess = (data: any) => {
       if (data && data.status) {
         message.success(data.message);
-        console.log("agents", data.data);
+
         const newAgent = data.data;
-        console.log(newAgent);
         setAgent(newAgent);
       } else {
         message.error(data.message);
@@ -632,7 +631,12 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
 
     const onSuccess = (data: any) => {
       if (data && data.status) {
-        setData(data.data);
+
+        if (data.data) {
+          setData({
+            ...data.data
+          });
+        }
       } else {
         message.error(data.message);
       }
@@ -640,7 +644,7 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
     };
     const onError = (err: any) => {
       // setError(err);
-      message.error(err.message);
+      // message.error(err.message);
       setLoading(false);
     };
     fetchJSON(cacheUrl, payLoad, onSuccess, onError);
@@ -680,11 +684,6 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
   React.useEffect(() => {
     fetchCache();
   }, [])
-
-  console.log(agent);
-  console.log(collections);
-  console.log(333);
-  console.log(collections.filter(item => item.schema_id == agent.schema_id));
 
   return <div className="">
     <ControlRowView
