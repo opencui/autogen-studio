@@ -43,6 +43,8 @@ from ..datamodel import (
     SignatureCompileRequest,
     OptimizerEnum,
     Evaluation,
+    ImplementationTestRequest,
+    ImplementationTestResponse,
 )
 from ..utils import (
     check_and_cast_datetime_fields,
@@ -408,6 +410,12 @@ async def create_implementation(body: Implementation):
     return create_entity(body, Implementation)
 
 
+@api.post("/implementations/test")
+async def test_implementation(body: ImplementationTestRequest):
+    print(body)
+    return ImplementationTestResponse()
+
+
 @api.delete("/implementations/delete")
 async def delete_implementation(implementation_id: int):
     filters = {"id": implementation_id}
@@ -438,6 +446,12 @@ async def get_evaluations(
 @api.post("/evaluationss")
 async def post_evaluations(body: Evaluation):
     return create_entity(body, Evaluation)
+
+
+@api.delete("/evaluations/delete")
+async def delete_evaluations(evaluation_id: int):
+    filters = {"id": evaluation_id}
+    return delete_entity(Evaluation, filters=filters)
 
 
 @api.get("/skills")
