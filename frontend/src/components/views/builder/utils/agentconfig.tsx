@@ -904,22 +904,35 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
       value=""
       titleExtra={<Select
         placeholder="Select metric"
-        value={data.metric_id}
+        value={data.metric_id && `${data.metric_type},${data.metric_id}`}
         onChange={(value) => {
+
+          if (!value) {
+            setData({
+              ...data,
+              metric_id: undefined,
+              metric_type: undefined
+            });
+            return;
+          }
+          const tp = value.split(',')[0];
+          const id = Number(value.split(',')[1]);
+
           setData({
             ...data,
-            metric_id: value,
-            metric_type: skills.find((item) => item.id === value) ? 'skill' : 'agent'
+            metric_id: id,
+            metric_type: tp as 'skill' | 'agent'
           });
         }}
       >
         {
-          skills.map((item) => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+          skills.map(item => <Select.Option key={`skill-${item.id}`} value={`skill,${item.id}`}>{item.name}</Select.Option>)
         }
         {
-          agents.map((item) => <Select.Option key={item.id} value={item.id}>{item.config.name}</Select.Option>)
+          agents.map(item => <Select.Option key={`agent-${item.id}`} value={`agent,${item.id}`}>{item.config?.name}</Select.Option>)
         }
-      </Select>}
+      </Select>
+      }
       control=""
     />
     <div className="w-full mt-4 text-right">
@@ -1007,8 +1020,9 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
   const [openAddEvaluation, setOpenAddEvaluation] = React.useState<boolean>(false);
   const [addEvalueationCollectionId, setAddEvaluationCollectionId] = React.useState<number | null>(null);
   const [addEvalueationMetricId, setAddEvaluationMetricId] = React.useState<number | null>(null);
-  const [addEvalueationMetricType, setAddEvaluationMetricType] = React.useState<'skill' | 'agent' | undefined>(undefined);
+  const [addEvaluationMetricType, setAddEvaluationMetricType] = React.useState<'skill' | 'agent' | undefined>(undefined);
   const [saveAsName, setSaveAsName] = React.useState<string>("");
+  const [saveAsOpen, setSaveAsOpen] = React.useState<boolean>(false);
   const [selectedEvaluation, setSelectedEvaluation] = React.useState<IEvaluation | null>(null);
   const [openDrawer, setOpenDrawer] = React.useState<boolean>(false);
   const [testInputs, setTestInputs] = React.useState<{ [key: string]: string }>({});
@@ -1356,32 +1370,36 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
         }
       />
       <div className="w-full mt-4 text-right">
+        <Modal open={saveAsOpen}
+          title="Save as a new implementation"
+          onOk={() => {
+            copyImplementation({
+              ...data,
+              name: saveAsName
+            }, () => {
+              setSaveAsOpen(false);
+            });
+          }}
+          onCancel={(close) => {
+            setSaveAsOpen(false);
+          }}
+        >
+          <div>
+            <label>Name</label>
+            <Input key="save-as-name" value={saveAsName}
+              placeholder="new implementation name"
+              onChange={(e) => {
+                setSaveAsName(e.target.value);
+              }}></Input>
+          </div>
+        </Modal>
         {" "}
         {hasChanged && (
           <Button
             type="primary"
             onClick={() => {
-              setSaveAsName(`${implementation.name}_copy`)
-              Modal.confirm({
-                title: "Save as a new implementation",
-                content: <div>
-                  <label>Name</label>
-                  <Input value={saveAsName}
-                    placeholder="new implementation name"
-                    onChange={(e) => {
-                      setSaveAsName(e.target.value);
-                    }}></Input>
-                </div>,
-                onOk: (close) => {
-                  copyImplementation({
-                    ...data,
-                    name: saveAsName
-                  }, close);
-                },
-                onCancel: (close) => {
-                  close();
-                }
-              })
+              setSaveAsName(`${implementation.name}_copy`);
+              setSaveAsOpen(true);
             }}
             loading={loading}
           >
@@ -1402,7 +1420,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           addEvaluation({
             collection: collections.find(item => item.id === addEvalueationCollectionId),
             metric_id: addEvalueationMetricId,
-            metric_type: addEvalueationMetricType,
+            metric_type: addEvaluationMetricType,
             implementation_id: implementation.id,
             agent_id: agentId
           });
@@ -1434,30 +1452,41 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           value={""}
           control={
             <Select
-              value={addEvalueationMetricId}
+              value={addEvalueationMetricId && `${addEvaluationMetricType},${addEvalueationMetricId}` || null}
               placeholder="Select a collection"
               onChange={(value) => {
-                const seletedSkill = skills.find(item => item.id === value);
-                if (seletedSkill) {
-                  setAddEvaluationMetricId(value);
-                  setAddEvaluationMetricType('skill');
-                } else {
-                  setAddEvaluationMetricId(value);
+
+                if (!value) {
+                  setAddEvaluationMetricId(null);
+                  setAddEvaluationMetricType(undefined);
+                  return;
+                }
+                const tp = value.split(',')[0];
+                const id = Number(value.split(',')[1]);
+
+                if (tp === 'skill') {
+                  setAddEvaluationMetricId(id);
+                  setAddEvaluationMetricType(tp);
+                } else if (tp === 'agent') {
+                  setAddEvaluationMetricId(id);
                   setAddEvaluationMetricType('agent');
+                } else {
+                  setAddEvaluationMetricId(null);
+                  setAddEvaluationMetricType(undefined);
                 }
               }}
             >
               {
-                skills.map(item => <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>)
+                skills.map(item => <Select.Option key={`skill-${item.id}`} value={`skill,${item.id}`}>{item.name}</Select.Option>)
               }
               {
-                agents.map(item => <Select.Option key={item.id} value={item.id}>{item.config?.name}</Select.Option>)
+                agents.map(item => <Select.Option key={`agent-${item.id}`} value={`agent,${item.id}`}>{item.config?.name}</Select.Option>)
               }
             </Select>
           }
         />
       </Modal>
-    </div>;
+    </div >;
 }
 
 export const ImplementationView = ({ agentId, models, collections, skills, agents, schemas }:
