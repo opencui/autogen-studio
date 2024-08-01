@@ -610,8 +610,8 @@ export const AgentCompileView = ({ agentId, agent, models, collections, skills, 
     models: [null, null],
     training_sets: [],
     development_sets: [],
-    implementation_name: "",
-    implementation_description: ""
+    name: "",
+    description: ""
   })
 
   const [saveName, setSaveName] = React.useState<string>("");
@@ -1553,7 +1553,10 @@ export const ImplementationView = ({ agentId, models, collections, skills, agent
 
   return selected ? <ImplementationDetail
     implementation={selected}
-    setImplementation={setSelected}
+    setImplementation={(next) => {
+      fetchImplementations();
+      setSelected(next);
+    }}
     agentId={agentId}
     schema={getSchema()!}
     collections={collections}
@@ -1799,6 +1802,7 @@ export const AgentViewer = ({
         tabBarStyle={{ paddingLeft: 0, marginLeft: 0 }}
         defaultActiveKey="1"
         items={items}
+        destroyInactiveTabPane
       />
     </div>
   );

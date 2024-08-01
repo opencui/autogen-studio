@@ -174,8 +174,8 @@ export interface ISignatureCompileRequest {
   metric_id?: number;
   metric_type?: 'skill' | 'agent';
 
-  implementation_name: string;
-  implementation_description: string;
+  name: string;
+  description: string;
 }
 
 export interface IImplementation {
