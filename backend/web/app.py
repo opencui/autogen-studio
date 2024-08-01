@@ -2,6 +2,7 @@ import asyncio
 import string
 import random
 import os
+import json
 import queue
 import threading
 import traceback
@@ -358,7 +359,6 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         dbmanager.get(Collections, filters={"id": o}).data[0] if o is not None else None
         for o in training_sets
     ]
-    print(data)
 
     try:
         agent = dbmanager.get(Agent, filters={"id": body.agent_id}).data[0]
@@ -378,8 +378,15 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         "training_set": data["data"]["training_sets"],
         "model": data["data"]["models"][0],
     }
-    print("args", args)
-    compile_and_train(**args)
+    implementation, infer_code = compile_and_train(**args)
+    i = Implementation(
+        name=body.name,
+        description=body.description,
+        agent_id=body.agent_id,
+        generated_prompt=json.dumps(implementation),
+    )
+
+    create_entity(i, Implementation, {})
 
     return data
 

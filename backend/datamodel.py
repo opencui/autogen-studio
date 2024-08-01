@@ -456,8 +456,8 @@ class SignatureCompileRequest(SQLModel, table=True):
     metric_id: int
     metric_type: MetricType = Field(sa_column=Column(SqlEnum(MetricType)))
 
-    implementation_name: str = ""
-    implementation_description: str = ""
+    name: str = ""
+    description: str = ""
 
 
 class Implementation(SQLModel, table=True):
