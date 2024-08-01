@@ -338,7 +338,7 @@ const AgentsView = ({ }: any) => {
 
     const closeDetail = () => {
       setShowDetailComp(false);
-      if (handler) {g
+      if (handler) {
         handler(localAgent);
       }
     };
