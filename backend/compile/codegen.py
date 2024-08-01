@@ -126,14 +126,14 @@ def generate_module_for_train(
     schema.fields = list(filter(lambda x: x["mode"] != "any", schema.fields))
     num_of_output = len(list(filter(lambda x: x["mode"] == "output", schema.fields)))
     if num_of_output == 0:
-        return False, "No output fields"
+        raise RuntimeError("No output fields")
 
     # now make sure we have skill for metric:
     function_name = skill.name
     print(function_name)
     functions = extract_function_names(skill.content)
     if function_name not in functions:
-        return False, "metric function is not presented"
+        raise RuntimeError("metric function is not presented")
 
     # Now we generate both metric function and signature and training
     env = Environment(loader=FileSystemLoader("backend/compile/templates"))
