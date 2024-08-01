@@ -1333,7 +1333,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
             })}
             columns={[{
               title: "Time",
-              dataIndex: "create_at"
+              dataIndex: "created_at"
             }, {
               title: "Collection",
               dataIndex: ["collection", "name"]
