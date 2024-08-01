@@ -485,9 +485,14 @@ class Evaluation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     agent_id: Optional[int] = None
-    collection_id: Optional[int] = None
     implementation_id: Optional[int] = None
-    metric: Dict = Field(default={}, sa_column=Column(JSON))
+
+    collection_id: int | None = Field(default=None, foreign_key="collections.id")
+    # collection: Collections | None = Relationship(back_populates="evaluations")
+
+    metric_id: int
+    metric_type: MetricType = Field(sa_column=Column(SqlEnum(MetricType)))
+
     result: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
 
 
