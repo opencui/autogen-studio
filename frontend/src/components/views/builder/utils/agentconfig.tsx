@@ -1357,7 +1357,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
       />
       <div className="w-full mt-4 text-right">
         {" "}
-        {!hasChanged && (
+        {hasChanged && (
           <Button
             type="primary"
             onClick={() => {
