@@ -370,7 +370,7 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         return
 
     args = {
-        "strategy": body.prompt_strategy,
+        "strategy": PromptStrategyEnum(body.prompt_strategy),
         "schema": schema,
         "skill": None if len(skills) == 0 else skills[0],
         "opt_type": OptimizerEnum(body.optimizer),
