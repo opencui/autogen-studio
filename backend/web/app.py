@@ -165,6 +165,7 @@ def list_entity(
     return_json: bool = True,
     order: str = "desc",
     limit: int | None = None,
+    first: bool = False,
 ):
     """List all entities for a user"""
     return dbmanager.get(
@@ -173,6 +174,7 @@ def list_entity(
         return_json=return_json,
         order=order,
         limit=limit,
+        first=first,
     )
 
 
@@ -418,13 +420,24 @@ async def get_evaluations(
     implementation_id: int,
 ):
     filters = {"agent_id": agent_id, "implementation_id": implementation_id}
-    return list_entity(Evaluation, filters=filters)
+    result = list_entity(Evaluation, filters=filters, return_json=False)
+
+    if result.data:
+        for i, e in enumerate(result.data):
+            e.collection = list_entity(
+                Collections,
+                filters={"id": e.collection},
+                limit=1,
+                first=True,
+                return_json=False,
+            ).data
+            result.data[i] = e
+    return result
 
 
 @api.post("/evaluationss")
 async def post_evaluations(body: Evaluation):
-    print(body)
-    pass
+    return create_entity(body, Evaluation)
 
 
 @api.get("/skills")

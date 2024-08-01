@@ -94,6 +94,7 @@ class DBManager:
         return_json: bool = False,
         order: str = "desc",
         limit: int | None = None,
+        first: bool = False,
     ):
         """List all entities"""
         result = []
@@ -123,7 +124,11 @@ class DBManager:
                     self._model_to_dict(row) for row in session.exec(statement).all()
                 ]
             else:
-                result = session.exec(statement).all()
+                if first:
+                    result = session.exec(statement).first()
+                else:
+                    result = session.exec(statement).all()
+
             status_message = f"{model_class.__name__} Retrieved Successfully"
         except Exception as e:
             session.rollback()
@@ -145,12 +150,19 @@ class DBManager:
         return_json: bool = False,
         order: str = "desc",
         limit: int | None = None,
+        first: bool = False,
     ):
         """List all entities"""
 
         with Session(self.engine) as session:
             response = self.get_items(
-                model_class, session, filters, return_json, order, limit
+                model_class,
+                session,
+                filters,
+                return_json,
+                order,
+                limit,
+                first,
             )
         return response
 

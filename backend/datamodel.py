@@ -205,6 +205,20 @@ class AgentLink(SQLModel, table=True):
     )
 
 
+class SingleIntType(TypeDecorator):
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        data = None
+        if value is not None:
+            data = value.get("id", None)
+
+        return data
+
+    def process_result_value(self, value, dialect):
+        return value
+
+
 class ListType(TypeDecorator):
     impl = String
 
@@ -213,8 +227,6 @@ class ListType(TypeDecorator):
 
     def process_result_value(self, value, dialect):
         return []
-
-    impl = String
 
 
 class ArrayType(TypeDecorator):
@@ -487,13 +499,23 @@ class Evaluation(SQLModel, table=True):
     agent_id: Optional[int] = None
     implementation_id: Optional[int] = None
 
-    collection_id: int | None = Field(default=None, foreign_key="collections.id")
-    # collection: Collections | None = Relationship(back_populates="evaluations")
+    collection: Optional[Collections] = Field(
+        default=None, sa_column=Column(SingleIntType)
+    )
 
     metric_id: int
     metric_type: MetricType = Field(sa_column=Column(SqlEnum(MetricType)))
 
     result: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
+
+    created_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now,
+        sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
+    )
 
 
 class ImplementationTestRequest(SQLModel, table=False):
