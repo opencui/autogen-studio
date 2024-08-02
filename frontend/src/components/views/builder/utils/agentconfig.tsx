@@ -10,6 +10,7 @@ import {
   Modal,
   Select,
   Slider,
+  Switch,
   Table,
   Tabs,
   message,
@@ -142,13 +143,13 @@ export const AgentConfigView = ({
             <ControlRowView
               title="Name"
               className=""
-              description="Name of the signature"
+              description="Name of the module"
               value=""
               control={
                 <>
                   <Input
                     className="mt-2"
-                    placeholder="Signature Name"
+                    placeholder="Module Name"
                     value={agent?.config?.name}
                     onChange={(e) => {
                       onControlChange(e.target.value, "name");
@@ -171,7 +172,7 @@ export const AgentConfigView = ({
               control={
                 <Input
                   className="mt-2"
-                  placeholder="Signature Description"
+                  placeholder="Module Description"
                   value={agent.config.description || ""}
                   onChange={(e) => {
                     onControlChange(e.target.value, "description");
@@ -179,8 +180,20 @@ export const AgentConfigView = ({
                 />
               }
             />
-
             <ControlRowView
+              title="Schema based"
+              className="mt-4"
+              description=""
+              value={""}
+              titleExtra={
+                <Switch value={agent.schema_base} onChange={(checked) => {
+                  onAgentChange(checked, "schema_base");
+                }} />
+              }
+              control={""
+              }
+            />
+            {agent.schema_base ? <ControlRowView
               title="Schema"
               className="mt-4"
               description=""
@@ -205,7 +218,7 @@ export const AgentConfigView = ({
               }
               control={
                 <Table
-                  dataSource={agent.schema_id && schemas.filter((schema) => schema.id === agent.schema_id)}
+                  dataSource={agent.schema_id && schemas.filter((schema) => schema.id === agent.schema_id) || []}
                   columns={[{
                     title: "Name",
                     dataIndex: "name"
@@ -218,7 +231,45 @@ export const AgentConfigView = ({
                 />
               }
             />
-
+              : <ControlRowView
+                title="Code"
+                className="mt-4"
+                description=""
+                value={""}
+                extra={
+                  <Select
+                    placeholder="Select code function"
+                    value={agent.code_skill_id}
+                    onChange={(value) => {
+                      onAgentChange(value, "code_skill_id");
+                    }}
+                  >
+                    {
+                      skills.map((opt) =>
+                        <Select.Option key={opt.id} value={opt.id}>
+                          {
+                            opt.name
+                          }
+                        </Select.Option>)
+                    }
+                  </Select>
+                }
+                control={
+                  <Table
+                    dataSource={agent.code_skill_id && skills.filter((item) => item.id === agent.code_skill_id) || []}
+                    columns={[{
+                      title: "Name",
+                      dataIndex: "name"
+                    }, {
+                      title: "Description",
+                      dataIndex: "description"
+                    }]}
+                    pagination={false}
+                    rowKey="id"
+                  />
+                }
+              />
+            }
             <ControlRowView
               title="Functions"
               className="mt-4"
@@ -1826,7 +1877,7 @@ export const AgentViewer = ({
       {/* <RenderView viewIndex={currentViewIndex} /> */}
       <Tabs
         tabBarExtraContent={{
-          left: <div className="mr-4"><LeftOutlined onClick={close} /> <a className="text-blue">Signature detail</a> </div>
+          left: <div className="mr-4"><LeftOutlined onClick={close} /> <a className="text-blue">Module detail</a> </div>
         }}
         tabBarStyle={{ paddingLeft: 0, marginLeft: 0 }}
         defaultActiveKey="1"

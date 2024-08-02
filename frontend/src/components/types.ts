@@ -61,7 +61,9 @@ export interface IAgent {
   user_id?: string;
 
   // new fields
-  schema_id?: ISchema;
+  schema_base: boolean;
+  schema_id?: number;
+  code_skill_id?: number;
   functions?: Array<ISkill>;
 }
 
@@ -117,7 +119,9 @@ export interface ICollection {
   updated_at?: string;
   user_id?: string; // user.email
   schema_id?: number;
-  table_name?: string; //不确定需不需要，如果需要应由后端生成确保唯一性，对应具体collection的table name
+  
+  external?: boolean;
+  fieldsMapping?: {[key: string]: string};
 }
 
 export interface ICollectionRow {

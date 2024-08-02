@@ -46,7 +46,7 @@ const AgentsView = ({ }: any) => {
 
   const [showDetailComp, setShowDetailComp] = React.useState(false);
 
-  const sampleAgent = {
+  const sampleAgent: IAgent = {
     config: {
       name: "sample_agent",
       description: "Sample agent description",
@@ -54,6 +54,7 @@ const AgentsView = ({ }: any) => {
       max_consecutive_auto_reply: 3,
       system_message: "",
     },
+    schema_base: true
   };
   const [newAgent, setNewAgent] = React.useState<IAgent | null>(sampleAgent);
 
@@ -453,7 +454,7 @@ const AgentsView = ({ }: any) => {
           <div className="flex mt-2 pb-2 mb-2 border-b">
             <div className="flex-1 font-semibold mb-2 ">
               {" "}
-              Signatures ({agentRows.length}){" "}
+              Modules ({agentRows.length}){" "}
             </div>
             <div>
               <Dropdown.Button
@@ -476,7 +477,7 @@ const AgentsView = ({ }: any) => {
 
           <div className="text-xs mb-2 pb-1  ">
             {" "}
-            Set up a signature that can be reused in your modules.{" "}
+            Set up a module that can be reused in your modules.{" "}
             {selectedAgent?.config.name}
           </div>
           {agents && agents.length > 0 && (
@@ -489,7 +490,7 @@ const AgentsView = ({ }: any) => {
           {agents && agents.length === 0 && !loading && (
             <div className="text-sm border mt-4 rounded text-secondary p-2">
               <InformationCircleIcon className="h-4 w-4 inline mr-1" />
-              No signature found. Please create a new signature.
+              No module found. Please create a new module.
             </div>
           )}
 
