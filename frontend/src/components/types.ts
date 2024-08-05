@@ -119,9 +119,10 @@ export interface ICollection {
   updated_at?: string;
   user_id?: string; // user.email
   schema_id?: number;
-  
+
   external?: boolean;
-  fieldsMapping?: {[key: string]: string};
+  url?: string;
+  fields_mapping?: { [key: string]: string };
 }
 
 export interface ICollectionRow {

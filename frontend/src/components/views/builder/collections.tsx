@@ -6,7 +6,7 @@ import {
   PlusIcon,
   TrashIcon
 } from "@heroicons/react/24/outline";
-import { Button, Dropdown, GetProp, Input, MenuProps, Modal, Select, Switch, Upload, UploadFile, UploadProps, message } from "antd";
+import { Button, Dropdown, GetProp, Input, MenuProps, Modal, Select, Switch, Table, Upload, UploadFile, UploadProps, message } from "antd";
 import { LeftOutlined, UploadOutlined } from "@ant-design/icons";
 import * as React from "react";
 import { ICollection, ISchema, IStatus } from "../../types";
@@ -31,6 +31,7 @@ import { ModelConfigView } from "./utils/modelconfig";
 import { CollectionConfigView } from "./utils/collectionconfig";
 import { create } from "domain";
 import { createConnection } from "net";
+import { darcula } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 const CollectionsView = ({ }: any) => {
   const [loading, setLoading] = React.useState(false);
@@ -466,6 +467,84 @@ const CollectionsView = ({ }: any) => {
               : <Upload className="w-full" {...uploadProps} accept=".csv">
                 <Button icon={<UploadOutlined />}>Click here or drag a CSV file into this area to upload it</Button>
               </Upload>
+          }
+          {createWithSchema &&
+            <ControlRowView
+              title="External"
+              className="mt-4"
+              description=""
+              value={""}
+              titleExtra={
+                <Switch checked={createData.external} onChange={(checked) => {
+                  setCreateData({
+                    ...createData,
+                    external: checked
+                  });
+                }} />
+              }
+              control={""}
+            />
+          }
+          {createData.external &&
+            <>
+              <ControlRowView
+                title="URL"
+                className="mt-4"
+                description="URL of the external collection"
+                value={""}
+                control={
+                  <Input
+                    className="mt-2 w-full"
+                    value={createData.url}
+                    placeholder="Please enter the URL of the external collection"
+                    onChange={(e) => {
+                      setCreateData({
+                        ...createData,
+                        url: e.target.value
+                      });
+                    }}
+                  />
+                }
+              />
+              <ControlRowView
+                title="Fields mapping"
+                className="mt-4"
+                description=""
+                value={""}
+                titleExtra={
+                  ""
+                }
+                control={
+                  <Table
+                    dataSource={schemas?.find((item) => item.id === createData.schema_id)?.fields}
+                    rowKey="name"
+                    columns={[
+                      {
+                        title: "Field name",
+                        dataIndex: "name"
+                      },
+                      {
+                        title: "Column name",
+                        dataIndex: "",
+                        render: (_, record) => {
+                          return <Input
+                            value={createData.fields_mapping && createData.fields_mapping[record.name] || ""}
+                            onChange={(e) => {
+                              const next = createData.fields_mapping || {};
+                              next[record.name] = e.target.value;
+                              setCreateData({
+                                ...createData,
+                                fields_mapping: next
+                              });
+                            }}
+                          />
+                        }
+                      }
+                    ]}
+                  />
+                }
+              />
+            </>
           }
         </Modal>
       }
