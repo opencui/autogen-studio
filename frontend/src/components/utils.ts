@@ -66,7 +66,7 @@ export function fetchJSON(
   payload: any = {},
   onSuccess: (data: any) => void,
   onError: (error: IStatus) => void,
-  onFinal: () => void = () => {}
+  onFinal: () => void = () => { }
 ) {
   return fetch(url, payload)
     .then(function (response) {
@@ -308,6 +308,7 @@ export const sampleAgentConfig = (agent_type: string = "assistant") => {
   const userProxyFlowSpec: IAgent = {
     type: "userproxy",
     config: userProxyConfig,
+    schema_base: true
   };
 
   const assistantConfig: IAgentConfig = {
@@ -324,6 +325,7 @@ export const sampleAgentConfig = (agent_type: string = "assistant") => {
   const assistantFlowSpec: IAgent = {
     type: "assistant",
     config: assistantConfig,
+    schema_base: true
   };
 
   const groupChatAssistantConfig = Object.assign(
@@ -344,6 +346,7 @@ export const sampleAgentConfig = (agent_type: string = "assistant") => {
   const groupChatFlowSpec: IAgent = {
     type: "groupchat",
     config: groupChatAssistantConfig,
+    schema_base: true
   };
 
   if (agent_type === "userproxy") {

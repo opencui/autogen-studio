@@ -232,7 +232,7 @@ export const AgentConfigView = ({
               }
             />
               : <ControlRowView
-                title="Code"
+                title="Class"
                 className="mt-4"
                 description=""
                 value={""}

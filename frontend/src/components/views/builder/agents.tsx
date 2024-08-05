@@ -57,7 +57,7 @@ const AgentsView = ({ }: any) => {
     schema_base: true
   };
   const [newAgent, setNewAgent] = React.useState<IAgent | null>(sampleAgent);
-
+  console.log(newAgent);
   const deleteAgent = (agent: IAgent) => {
     setError(null);
     setLoading(true);
@@ -345,18 +345,6 @@ const AgentsView = ({ }: any) => {
     };
 
     return (
-      // <Modal
-      //   title={<>Agent Configuration</>}
-      //   width={800}
-      //   open={showDetailComp}
-      //   onOk={() => {
-      //     closeDetail();
-      //   }}
-      //   onCancel={() => {
-      //     closeDetail();
-      //   }}
-      //   footer={[]}
-      // >
       agent && showDetailComp && (
         <AgentViewer
           agent={localAgent || agent}
