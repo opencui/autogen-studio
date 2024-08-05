@@ -265,7 +265,7 @@ class DBManager:
                         )
                     ).all()
             except Exception as e:
-                logger.error("Error while getting linked entities: %s", e)
+                logger.error(f"Error while getting linked entities: {e}")
                 status_message = f"Error while getting linked entities: {e}"
                 status = False
             if return_json:

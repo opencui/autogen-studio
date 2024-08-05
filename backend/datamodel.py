@@ -291,7 +291,9 @@ class Agent(SQLModel, table=True):
             secondaryjoin="Agent.id==AgentLink.agent_id",
         ),
     )
+    schema_base: bool = True
     schema_id: Optional[int] = None
+    code_skill_id: Optional[int] = None
     functions: Optional[List[Skill]] = Field(default=None, sa_column=Column(ListType))
 
 
@@ -410,6 +412,10 @@ class Collections(SQLModel, table=True):
     name: str
     description: str
     schema_id: Optional[int] = None
+
+    external: bool | None = None
+    url: str | None = None
+    fieldMapping: Dict | None = Field(default={}, sa_column=Column(JSON))
 
 
 class CollectionRow(SQLModel, table=True):

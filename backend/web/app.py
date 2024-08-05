@@ -20,7 +20,7 @@ from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
 
-from backend.compile.codegen import compile_and_train
+from backend.compile.codegen import compile_and_train, evaluate
 
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
@@ -527,11 +527,13 @@ async def list_agents(user_id: str):
 @api.post("/agents")
 async def create_agent(agent: Agent):
     """Create a new agent"""
-    for o in dbmanager.get_linked_entities("agent_skill", agent.id).data:
-        dbmanager.unlink(
-            link_type="agent_skill", primary_id=agent.id, secondary_id=o.id
-        )
-    if agent.functions:
+    if agent.id is not None:
+        for o in dbmanager.get_linked_entities("agent_skill", agent.id).data:
+            dbmanager.unlink(
+                link_type="agent_skill", primary_id=agent.id, secondary_id=o.id
+            )
+
+    if agent.functions and len(agent.functions) > 0:
         for o in agent.functions:
             dbmanager.link(
                 link_type="agent_skill",
@@ -541,9 +543,11 @@ async def create_agent(agent: Agent):
 
     result = create_entity(agent, Agent)
     data = result.get("data", {})
-    data["functions"] = dbmanager.get_linked_entities(
-        "agent_skill", data.get("id")
-    ).data
+    if agent.functions and len(agent.functions) > 0:
+        print("xxxx")
+        data["functions"] = dbmanager.get_linked_entities(
+            "agent_skill", data.get("id")
+        ).data
 
     result["data"] = data
     return result
