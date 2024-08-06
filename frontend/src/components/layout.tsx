@@ -33,7 +33,7 @@ const Layout = ({
         <title>{meta?.title + " | " + title}</title>
         <div className="   h-full  text-primary">{children}</div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 
