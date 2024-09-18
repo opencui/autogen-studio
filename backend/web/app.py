@@ -6,6 +6,7 @@ import json
 import queue
 import threading
 import traceback
+from functools import partial
 from contextlib import asynccontextmanager
 from typing import Any, Collection
 
@@ -53,6 +54,12 @@ from ..utils import (
     test_model,
 )
 from ..version import VERSION
+
+
+from concurrent.futures import ProcessPoolExecutor
+
+executor = ProcessPoolExecutor(max_workers=5)
+
 
 managers = {"chat": None}  # manage calls to autogen
 # Create thread-safe queue for messages between api thread and autogen threads
@@ -383,7 +390,12 @@ async def create_implementation_complie(body: SignatureCompileRequest):
         "training_set": data["data"]["training_sets"],
         "model": data["data"]["models"][0],
     }
-    implementation, infer_code = compile_and_train(**args)
+    print(args)
+
+    loop = asyncio.get_event_loop()
+    task = partial(compile_and_train, **args)
+    implementation, infer_code = await loop.run_in_executor(executor, task)
+
     i = Implementation(
         name=body.name,
         description=body.description,
@@ -392,6 +404,7 @@ async def create_implementation_complie(body: SignatureCompileRequest):
     )
 
     create_entity(i, Implementation, {})
+    print(infer_code)
 
     return data
 
