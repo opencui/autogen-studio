@@ -28,6 +28,8 @@ dependencies = [
     "jinja2",
     "pyautogen[gemini]>=0.2.0",
     "python-dotenv",
+    "prompt-poet",
+    "litellm >= 1.44.1",
     "pyjson5",
     "dspy-ai",
     "websockets",
