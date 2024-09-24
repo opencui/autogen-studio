@@ -33,15 +33,14 @@ const Layout = ({
         <title>{meta?.title + " | " + title}</title>
         <div className="   h-full  text-primary">{children}</div>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 
   const { darkMode } = React.useContext(appContext);
   React.useEffect(() => {
-    document.getElementsByTagName("html")[0].className = `${
-      darkMode === "dark" ? "dark bg-primary" : "light bg-primary"
-    } `;
+    document.getElementsByTagName("html")[0].className = `${darkMode === "dark" ? "dark bg-primary" : "light bg-primary"
+      } `;
   }, [darkMode]);
 
   return (
