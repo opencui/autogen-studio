@@ -1,6 +1,6 @@
 import sys
 import litellm
-from backend.compile.utils import my_custom_callback, LiteSkill
+from backend.compile.base import my_custom_callback, LiteSkill
 
 # This is the simple sales template.
 simple_sale_template = """

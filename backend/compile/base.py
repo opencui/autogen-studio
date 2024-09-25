@@ -4,7 +4,7 @@ import ast
 import importlib
 import sys
 from _ast import stmt
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Callable, Tuple
 import litellm
 from prompt_poet import Prompt
 
@@ -79,11 +79,6 @@ def split_imports(source_code):
     return import_code, other_code
 
 
-class Statements(BaseModel):
-    imports: List[stmt]
-    rest: List[stmt]
-
-
 # This is used to create the nodes for later.
 def split_imports_into_nodes(source_code):
     # Parse the source code into an AST
@@ -126,7 +121,7 @@ class BuildConfig(BaseModel):
 # This is the simplistic building where we sequentially go through each build task, each returns a statements,
 # We then combine all the imports, and rest together respectively, from these statement, generate a source code
 # in str.
-def serial_build(configs: List[BuildConfig], build: Callable[[BuildConfig], Statements]) -> str:
+def serial_build(configs: List[BuildConfig], build: Callable[[BuildConfig], Tuple[List[stmt], List[stmt]]]) -> str:
     import_nodes = []
     rest_nodes = []
 

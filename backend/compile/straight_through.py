@@ -1,8 +1,9 @@
 import jinja2
 
 from jinja2 import Environment, FileSystemLoader
+
 from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model
-from backend.compile.utils import load_and_execute_code, split_imports
+from backend.compile.base import load_and_execute_code, split_imports, BuildConfig, split_imports_into_nodes
 import ast
 import astor
 import importlib
@@ -13,8 +14,10 @@ from typing import Tuple, Dict
 
 #
 # This base version simply use the input prompt (in prompt poet) directly.
-# We will create Input/Output, {Schema}Input and {Schema)Output that is pydantic class.
-# We will create the file, that include all the soft function implementation in the workspace.
+# We will code gen Input/Output, {Schema}Input and {Schema)Output that is pydantic class.
+# We will code gen the file, that include all the soft function implementation in the workspace.
+# We will code gen a LiteSkill object, {Schema}Impl,
+# We will code gen the fastAPI endpoint for this skill.
 #
 
 # This generates the base inference code that is served via FastAPI.
@@ -32,21 +35,13 @@ class LiteLlmInferenceGenerator:
         self.env = Environment(loader=FileSystemLoader("backend/compile/templates"))
         self.codes = []
         self.endpoints = []
-        self.template0 = self.env.get_template("infer.py.tpl")
-        self.template1 = self.env.get_template("endpoint.py.tpl")
+        self.template = self.env.get_template("litellm.py.tpl")
 
-    def add_fun(
-        self, schema: Schema, strategy: PromptStrategyEnum, implementation: str
-    ):
-        types = self.template0.render(schema=schema)
-        import0, code0 = split_imports(types)
-        self.imports.append(import0)
-        self.codes.append(code0)
+    def __call__(self, build_conf: BuildConfig):
+        code = self.template.render(schema=build_conf.schema, skill=build_conf.skill, model=build_conf.model)
+        import0, code0 = split_imports_into_nodes(code)
+        return
 
-        endpoint = self.template1.render(
-            schema=schema, strategy=strategy.value, implementation=implementation
-        )
-        self.endpoints.append(endpoint)
 
     def gen(self):
         self.codes.append("app = FastAPI()")
