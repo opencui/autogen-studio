@@ -396,7 +396,7 @@ class Schema(SQLModel, table=True):
         default_factory=List[SchemaField], sa_column=Column(JSON)
     )
 
-
+# @Hui, can we change this to collection instead?
 class Collections(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
     id: Optional[int] = Field(default=None, primary_key=True)

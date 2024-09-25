@@ -9,7 +9,6 @@ class {{ schema.name }}Request(BaseModel):
     {% endfor %}
 
 
-
 class {{schema.name}}Response(BaseModel):
     """ {{ schema.description }} """
     {% for field in schema.fields %}
