@@ -2,8 +2,8 @@ import jinja2
 
 from jinja2 import Environment, FileSystemLoader
 
-from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model
-from backend.compile.base import load_and_execute_code, split_imports, BuildConfig, split_imports_into_nodes
+from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model, Agent
+from backend.compile.base import load_and_execute_code, split_imports, split_imports_into_nodes
 import ast
 import astor
 import importlib
@@ -11,6 +11,9 @@ import sys
 import litellm
 import pyjson5 as json5
 from typing import Tuple, Dict
+
+from build.lib.backend import SignatureCompileRequest
+
 
 #
 # This base version simply use the input prompt (in prompt poet) directly.
@@ -37,8 +40,8 @@ class LiteLlmInferenceGenerator:
         self.endpoints = []
         self.template = self.env.get_template("litellm.py.tpl")
 
-    def __call__(self, build_conf: BuildConfig):
-        code = self.template.render(schema=build_conf.schema, skill=build_conf.skill, model=build_conf.model)
+    def __call__(self, agent: Agent, compile_config: SignatureCompileRequest):
+        code = self.template.render(schema=agent.schema, skill=agent, model=agent.models[0])
         import0, code0 = split_imports_into_nodes(code)
         return
 

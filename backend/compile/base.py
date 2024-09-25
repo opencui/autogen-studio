@@ -10,7 +10,7 @@ from prompt_poet import Prompt
 
 import astor
 from pydantic import BaseModel
-from backend import PromptStrategyEnum, Schema, Skill, OptimizerEnum, Model, Collections
+from backend import PromptStrategyEnum, Schema, Skill, OptimizerEnum, Model, Collections, Agent, SignatureCompileRequest
 
 
 class FunctionNameExtractor(ast.NodeVisitor):
@@ -99,29 +99,13 @@ def split_imports_into_nodes(source_code):
     return import_nodes, rest_nodes
 
 
-# This contains all the information needed to implement a particular skill.
-# The building process should take a list of these configuration, and create a list of
-# soft functions. (We should keep the prompt and every thing in the generated source
-# code file, so it is easy to deploy the generated code).
-# We expect individual builder have the type: Callable[BuildConfig, Statements]
-class BuildConfig(BaseModel):
-    schema: Schema
-    skill: Skill
-    model: Model
-    extra: Dict
-    label: str = "something_unique"
-    # These are only useful when we do automatic prompt optimization.
-    strategy: Optional[PromptStrategyEnum] = None
-    opt_type: Optional[OptimizerEnum] = None
-    opt_config: Optional[Dict] = None
-    training_set: Optional[Collections] = None
-    teacher: Optional[Model] = None,
-
 
 # This is the simplistic building where we sequentially go through each build task, each returns a statements,
 # We then combine all the imports, and rest together respectively, from these statement, generate a source code
 # in str.
-def serial_build(configs: List[BuildConfig], build: Callable[[BuildConfig], Tuple[List[stmt], List[stmt]]]) -> str:
+def serial_build(
+        configs: List[Tuple[Agent, SignatureCompileRequest]],
+        build: Callable[[Agent, SignatureCompileRequest], Tuple[List[stmt], List[stmt]]]) -> str:
     import_nodes = []
     rest_nodes = []
 
