@@ -39,7 +39,7 @@ gen_exemplar_template = """
 if __name__ == "__main__":
     litellm.callbacks = [my_custom_callback]
     print(sys.executable)
-    
+
     template_data = {
       "role": "CEO",
       "company": "Hai Di Lao",
