@@ -34,7 +34,7 @@ def extract_function_names(source_code):
 
 
 # Ideally, we should generate the training code and execute it on the fly, as
-# there is no reason,
+# there is no reason
 def load_and_execute_code(code, module_name="generated_module"):
     # Create a module specification
     importlib.invalidate_caches()
@@ -103,20 +103,27 @@ def split_imports_into_nodes(source_code):
 # This is the simplistic building where we sequentially go through each build task, each returns a statements,
 # We then combine all the imports, and rest together respectively, from these statement, generate a source code
 # in str.
-def serial_build(
-        configs: List[Tuple[SignatureCompileRequest]],
-        build: Callable[[SignatureCompileRequest], Tuple[List[stmt], List[stmt]]]) -> str:
-
-
-
+def build_source(module_sources: List[str]) -> str:
     import_nodes = []
     rest_nodes = []
 
+    setup_code = """
+    from prompt_poet import Prompt,
+    import litellm,
+    from fastapi import FastAPI
+    from pydantic import BaseModel
+    app = FastAPI()
+    """
+
+    import_node, rest_node = split_imports_into_nodes(setup_code)
+    import_nodes.extend(import_node)
+    rest_nodes.extend(rest_node)
+
     # We simply go through one config at a time.
-    for config in configs:
-        stmts = build(config)
-        import_nodes.append(stmts.imports)
-        rest_nodes.append(stmts.rest)
+    for module_source in module_sources:
+        import_node, rest_node = split_imports_into_nodes(module_source)
+        import_nodes.extend(import_node)
+        rest_nodes.extend(rest_node)
 
     # Create new AST modules for imports and other code
     import_module = ast.Module(body=import_nodes, type_ignores=[])
