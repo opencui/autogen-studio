@@ -1,13 +1,17 @@
 
 class {{schema.name}}Request(BaseModel):
-    {% for field in schema.fields %}
-    {% if field.mode == "input" %} {{field.name}} : {{field.true_type.value}} {% endif %}
-    {% endfor %}
+    {% for field in schema.fields -%}
+    {% if field.mode == "input" %}
+    {{field.name}} : {{field.true_type.value}}
+    {% endif %}
+    {%- endfor %}
 
 class {{schema.name}}Response(BaseModel):
-    {% for field in schema.fields %}
-    {% if field.mode == "output" %} {{field.name}} : {{field.true_type.value}} {% endif %}
-    {% endfor %}
+    {% for field in schema.fields -%}
+    {% if field.mode == "output" %}
+    {{field.name}} : {{field.true_type.value}}
+    {% endif %}
+    {%- endfor %}
 
 {{skill.name}}_impl == LiteSkill("{{model.label}}", """{{skill.prompt}}""")
 
