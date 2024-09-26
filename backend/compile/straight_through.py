@@ -88,10 +88,31 @@ if __name__ == "__main__":
     compile_request = SignatureCompileRequest()
 
     fields = []
-    fields.append(SchemaField(name="role", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="company", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="company_description", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="email", mode=SchemaFieldMode.output, type=SchemaFieldTrueType.string))
+    fields.append(SchemaField(
+        name="role",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"
+    ))
+    fields.append(SchemaField(
+        name="company",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
+    fields.append(SchemaField(
+        name="company_description",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
+    fields.append(SchemaField(
+        name="email",
+        mode=SchemaFieldMode.output,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
 
     schema = Schema(name="ColdCall", fields=fields)
     print(schema)
