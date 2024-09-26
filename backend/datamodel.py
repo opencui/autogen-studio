@@ -146,10 +146,10 @@ class Model(SQLModel, table=True):
         back_populates="models", link_model=AgentModelLink
     )
 
-
     def getLabel(self) -> str:
         # @Hui, change the implementation here. For now it returns a dummy.
         return "groq/llama-3.1-70b-versatile"
+
 
 class CodeExecutionConfigTypes(str, Enum):
     local = "local"
@@ -255,6 +255,7 @@ class ArrayType(TypeDecorator):
             except:
                 pass
         return data
+
 
 # Agent is simply a LLM based module.
 class Agent(SQLModel, table=True):
@@ -403,6 +404,7 @@ class Schema(SQLModel, table=True):
         default_factory=List[SchemaField], sa_column=Column(JSON)
     )
 
+
 # @Hui, can we change this to collection instead?
 class Collections(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
@@ -486,14 +488,19 @@ class SignatureCompileRequest(SQLModel, table=True):
 
     # These API will be used by code gen so that it does not need to know
     # how this information is stored.
-    def getAgent(self) -> Agent:
-        pass
 
-    def getWorkerModel(self)-> Model:
+    def setAgent(self, agent: Agent):
+        self.__table_args__["agent"] = agent
+
+    def getAgent(self) -> Agent:
+        return self.__table_args__["agent"]
+
+    def getWorkerModel(self) -> Model:
         pass
 
     def getSchema(self) -> Schema:
         pass
+
 
 class Implementation(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
