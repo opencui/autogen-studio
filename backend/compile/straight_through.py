@@ -43,14 +43,20 @@ class LiteSkillGenerator:
 
     # This is low level api, used to implement the high level api, where we just need to
     # extract the prompt template and
-    def generate(self, model_label: str, prompt_template: str, schema: Schema):
-        code = self.template.render(schema=agent.schema, skill=agent, model=agent.models[0])
-        import0, code0 = split_imports_into_nodes(code)
+    def generate(self, model_label: str, prompt_template: str, skill_name: str, schema: Schema):
+        skill = {
+            "name": skill_name,
+            "prompt": prompt_template
+        }
+        model = {
+            "label": model_label
+        }
+        code = self.template.render(schema=schema, skill=skill, model=model)
+        return split_imports_into_nodes(code)
 
-    def __call__(self, agent: Agent, compile_config: SignatureCompileRequest):
-        code = self.template.render(schema=agent.schema, skill=agent, model=agent.models[0])
-        import0, code0 = split_imports_into_nodes(code)
-        return
+    def __call__(self, compile_config: SignatureCompileRequest):
+        # Hui, get the information and invoke the low level generate function.
+        pass
 
 
     def gen(self):
@@ -98,3 +104,21 @@ if __name__ == "__main__":
 
     schema = Schema(name="ColdCall", fields=fields)
     print(schema)
+
+    skill = {
+        "name": "ColdCaller",
+        "prompt":
+            """
+            - name: system instructions
+              role: system
+              content: |
+                Your are a great sales for BeThere.ai, a startup specialized in building greate conversational 
+                service. Draft a short message for the cold call the {{ role }} for {{ company }} and you are 
+                meant to be helpful and never harmful to humans.
+            
+                {{ company }} is {{ company_description }}   
+            """
+    }
+    model_label = "groq/llama-3.1-70b-versatile"
+    generator = LiteSkillGenerator()
+    code = generator.generate(model_label, skill, schema.dict())
