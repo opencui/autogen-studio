@@ -20,7 +20,6 @@ from typing import Tuple, Dict
 # 3. inference of the single signature/module for adhoc testing.
 # 4. inference of many signatures/modules for export.
 
-
 class FunctionNameExtractor(ast.NodeVisitor):
     def __init__(self):
         self.function_names = []
@@ -234,16 +233,6 @@ class EvaluationGenerator:
         return module
 
 
-def evaluate(
-    schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Skill
-):
-    # gen.gen_code(schema, strategy, implementation)
-    # gen = EvaluationGenerator()
-    # gen.gen_evaluate(evaluate)
-    # module = gen.load()
-    return {"accuracy": 1.0}
-
-
 # This generates the inference code that is served via FastAPI.
 class InferenceGenerator:
     """This will generate main.py as FastAPI app.py"""
@@ -276,7 +265,6 @@ class InferenceGenerator:
 
     def gen(self):
         self.codes.append("app = FastAPI()")
-        return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
 
 
 if __name__ == "__main__":
