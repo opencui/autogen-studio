@@ -34,16 +34,11 @@ class LiteSkillGenerator:
 
     # This is low level api, used to implement the high level api, where we just need to
     # extract the prompt template and
-    def generate(self, model_label: str, prompt_template: str, skill_name: str, schema: Schema):
-        skill = {
-            "name": skill_name,
-            "prompt": prompt_template
-        }
+    def generate(self, model_label: str, skill, schema: Schema):
         model = {
             "label": model_label
         }
-        code = self.template.render(schema=schema, skill=skill, model=model)
-        return split_imports_into_nodes(code)
+        return self.template.render(schema=schema, skill=skill, model=model)
 
     def __call__(self, compile_config: SignatureCompileRequest):
         # Hui, get the information and invoke the low level generate function.
@@ -132,5 +127,6 @@ if __name__ == "__main__":
             """
     }
     model_label = "groq/llama-3.1-70b-versatile"
-    #generator = LiteSkillGenerator()
-    #code = generator.generate(model_label, skill, schema.dict())
+    generator = LiteSkillGenerator()
+    code = generator.generate(model_label, skill, schema.model_dump())
+    print(code)
