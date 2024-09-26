@@ -51,28 +51,6 @@ class LiteSkillGenerator:
 
 
 
-# We need to have
-def compile_and_train(
-    strategy: PromptStrategyEnum,
-    schema: Schema,
-    skill: Skill,
-    opt_type: OptimizerEnum,
-    opt_config: dict,
-    model: Model,
-    training_set: list,
-    teacher: Model = None,
-    label: str = "something_unique",
-):
-
-    implementation = {}  # optimizer.compile(module, trainset=training_set)
-    implementation["module_type"] = opt_type.value
-    implementation["model"] = model.model
-
-    infer_gen = None # LiteInferenceGenerator()
-    infer_gen.add_fun(schema, strategy, implementation)
-    infer_code = infer_gen.gen()
-
-    return implementation, infer_code
 
 
 
