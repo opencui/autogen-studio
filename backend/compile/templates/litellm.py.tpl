@@ -9,9 +9,9 @@ class {{schema.name}}Response(BaseModel):
     {% if field.mode == "output" %} {{field.name}} : {{field.type}} {% endif %}
     {% endfor %}
 
-{{skill.name}}_impl == LiteSkill({{model.model}}, {{skill.prompt}})
+{{skill.name}}_impl == LiteSkill({{model.label}}, {{skill.prompt}})
 
-@app.post("/{{schema.name}}/")
+@app.post("/{{skill.name}}/")
 async def process(item: {{schema.name}}Request):
-    return {{schema.name}}_impl.completion(**item)
+    return {{skill.name}}_impl.completion(**item)
 
