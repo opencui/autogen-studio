@@ -3,17 +3,8 @@ import jinja2
 from jinja2 import Environment, FileSystemLoader
 
 from backend import SchemaFieldMode, SchemaFieldTrueType
-from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model, Agent
+from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model, Agent, SignatureCompileRequest, SchemaField
 from backend.compile.base import load_and_execute_code, split_imports, split_imports_into_nodes
-import ast
-import astor
-import importlib
-import sys
-import litellm
-import pyjson5 as json5
-from typing import Tuple, Dict
-
-from build.lib.backend import SignatureCompileRequest, SchemaField
 
 
 #
@@ -43,16 +34,11 @@ class LiteSkillGenerator:
 
     # This is low level api, used to implement the high level api, where we just need to
     # extract the prompt template and
-    def generate(self, model_label: str, prompt_template: str, skill_name: str, schema: Schema):
-        skill = {
-            "name": skill_name,
-            "prompt": prompt_template
-        }
+    def generate(self, model_label: str, skill, schema: Schema):
         model = {
             "label": model_label
         }
-        code = self.template.render(schema=schema, skill=skill, model=model)
-        return split_imports_into_nodes(code)
+        return self.template.render(schema=schema, skill=skill, model=model)
 
     def __call__(self, compile_config: SignatureCompileRequest):
         # Hui, get the information and invoke the low level generate function.
@@ -64,32 +50,6 @@ class LiteSkillGenerator:
         return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
 
 
-
-# We need to have
-def compile_and_train(
-    strategy: PromptStrategyEnum,
-    schema: Schema,
-    skill: Skill,
-    opt_type: OptimizerEnum,
-    opt_config: dict,
-    model: Model,
-    training_set: list,
-    teacher: Model = None,
-    label: str = "something_unique",
-):
-
-    implementation = {}  # optimizer.compile(module, trainset=training_set)
-    implementation["module_type"] = opt_type.value
-    implementation["model"] = model.model
-
-    infer_gen = None # LiteInferenceGenerator()
-    infer_gen.add_fun(schema, strategy, implementation)
-    infer_code = infer_gen.gen()
-
-    return implementation, infer_code
-
-
-
 # This provides the commandline
 if __name__ == "__main__":
     # We create
@@ -97,10 +57,31 @@ if __name__ == "__main__":
     compile_request = SignatureCompileRequest()
 
     fields = []
-    fields.append(SchemaField(name="role", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="company", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="company_description", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
-    fields.append(SchemaField(name="email", mode=SchemaFieldMode.output, type=SchemaFieldTrueType.string))
+    fields.append(SchemaField(
+        name="role",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"
+    ))
+    fields.append(SchemaField(
+        name="company",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
+    fields.append(SchemaField(
+        name="company_description",
+        mode=SchemaFieldMode.input,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
+    fields.append(SchemaField(
+        name="email",
+        mode=SchemaFieldMode.output,
+        type=SchemaFieldTrueType.string,
+        description="roel",
+        prefix="why"))
 
     schema = Schema(name="ColdCall", fields=fields)
     print(schema)
@@ -120,5 +101,7 @@ if __name__ == "__main__":
             """
     }
     model_label = "groq/llama-3.1-70b-versatile"
-    #generator = LiteSkillGenerator()
-    #code = generator.generate(model_label, skill, schema.dict())
+    generator = LiteSkillGenerator()
+    code = generator.generate(model_label, skill, schema.model_dump())
+    print(code)
+
