@@ -50,10 +50,6 @@ class LiteSkillGenerator:
         return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
 
 
-
-
-
-
 # This provides the commandline
 if __name__ == "__main__":
     # We create
@@ -108,3 +104,4 @@ if __name__ == "__main__":
     generator = LiteSkillGenerator()
     code = generator.generate(model_label, skill, schema.model_dump())
     print(code)
+
