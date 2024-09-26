@@ -104,8 +104,11 @@ def split_imports_into_nodes(source_code):
 # We then combine all the imports, and rest together respectively, from these statement, generate a source code
 # in str.
 def serial_build(
-        configs: List[Tuple[Agent, SignatureCompileRequest]],
-        build: Callable[[Agent, SignatureCompileRequest], Tuple[List[stmt], List[stmt]]]) -> str:
+        configs: List[Tuple[SignatureCompileRequest]],
+        build: Callable[[SignatureCompileRequest], Tuple[List[stmt], List[stmt]]]) -> str:
+
+
+
     import_nodes = []
     rest_nodes = []
 
@@ -147,3 +150,14 @@ class LiteSkill:
             messages=list(map(lambda x: self.project(vars(x)), prompt.parts))
         )
         return response
+
+
+# This should be done from the restful api, so that we can evaluate more things.
+def evaluate(
+    schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Agent
+):
+    # gen.gen_code(schema, strategy, implementation)
+    # gen = EvaluationGenerator()
+    # gen.gen_evaluate(evaluate)
+    # module = gen.load()
+    return {"accuracy": 1.0}

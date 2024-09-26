@@ -2,6 +2,7 @@ import jinja2
 
 from jinja2 import Environment, FileSystemLoader
 
+from backend import SchemaFieldMode, SchemaFieldTrueType
 from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model, Agent
 from backend.compile.base import load_and_execute_code, split_imports, split_imports_into_nodes
 import ast
@@ -12,7 +13,7 @@ import litellm
 import pyjson5 as json5
 from typing import Tuple, Dict
 
-from build.lib.backend import SignatureCompileRequest
+from build.lib.backend import SignatureCompileRequest, SchemaField
 
 
 #
@@ -24,7 +25,7 @@ from build.lib.backend import SignatureCompileRequest
 #
 
 # This generates the base inference code that is served via FastAPI.
-class LiteLlmInferenceGenerator:
+class LiteSkillGenerator:
     """This will generate as FastAPI app.py"""
 
     def __init__(self):
@@ -40,6 +41,12 @@ class LiteLlmInferenceGenerator:
         self.endpoints = []
         self.template = self.env.get_template("litellm.py.tpl")
 
+    # This is low level api, used to implement the high level api, where we just need to
+    # extract the prompt template and
+    def generate(self, model_label: str, prompt_template: str, schema: Schema):
+        code = self.template.render(schema=agent.schema, skill=agent, model=agent.models[0])
+        import0, code0 = split_imports_into_nodes(code)
+
     def __call__(self, agent: Agent, compile_config: SignatureCompileRequest):
         code = self.template.render(schema=agent.schema, skill=agent, model=agent.models[0])
         import0, code0 = split_imports_into_nodes(code)
@@ -52,7 +59,7 @@ class LiteLlmInferenceGenerator:
 
 
 
-
+# We need to have
 def compile_and_train(
     strategy: PromptStrategyEnum,
     schema: Schema,
@@ -77,4 +84,17 @@ def compile_and_train(
 
 
 
+# This provides the commandline
+if __name__ == "__main__":
+    # We create
+    agent = Agent()
+    compile_request = SignatureCompileRequest()
 
+    fields = []
+    fields.append(SchemaField(name="role", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
+    fields.append(SchemaField(name="company", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
+    fields.append(SchemaField(name="company_description", mode=SchemaFieldMode.input, type=SchemaFieldTrueType.string))
+    fields.append(SchemaField(name="email", mode=SchemaFieldMode.output, type=SchemaFieldTrueType.string))
+
+    schema = Schema(name="ColdCall", fields=fields)
+    print(schema)

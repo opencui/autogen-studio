@@ -80,6 +80,8 @@ class AgentModelLink(SQLModel, table=True):
     model_id: int = Field(default=None, primary_key=True, foreign_key="model.id")
 
 
+# Skill is hard function, or imperative functions, implemented in some programming language,
+# In this case, python.
 class Skill(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -119,6 +121,7 @@ class ModelTypes(str, Enum):
     azure = "azure"
 
 
+# This is used to specify how LLM is used.
 class Model(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -143,6 +146,10 @@ class Model(SQLModel, table=True):
         back_populates="models", link_model=AgentModelLink
     )
 
+
+    def getLabel(self) -> str:
+        # @Hui, change the implementation here. For now it returns a dummy.
+        return "groq/llama-3.1-70b-versatile"
 
 class CodeExecutionConfigTypes(str, Enum):
     local = "local"
@@ -249,7 +256,7 @@ class ArrayType(TypeDecorator):
                 pass
         return data
 
-
+# Agent is simply a LLM based module.
 class Agent(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -477,6 +484,16 @@ class SignatureCompileRequest(SQLModel, table=True):
     name: str = ""
     description: str = ""
 
+    # These API will be used by code gen so that it does not need to know
+    # how this information is stored.
+    def getAgent(self) -> Agent:
+        pass
+
+    def getWorkerModel(self)-> Model:
+        pass
+
+    def getSchema(self) -> Schema:
+        pass
 
 class Implementation(SQLModel, table=True):
     __table_args__ = {"sqlite_autoincrement": True}

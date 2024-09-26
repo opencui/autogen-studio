@@ -233,16 +233,6 @@ class EvaluationGenerator:
         return module
 
 
-def evaluate(
-    schema: Schema, strategy: PromptStrategyEnum, implementation: str, evaluate: Skill
-):
-    # gen.gen_code(schema, strategy, implementation)
-    # gen = EvaluationGenerator()
-    # gen.gen_evaluate(evaluate)
-    # module = gen.load()
-    return {"accuracy": 1.0}
-
-
 # This generates the inference code that is served via FastAPI.
 class InferenceGenerator:
     """This will generate main.py as FastAPI app.py"""
@@ -275,44 +265,6 @@ class InferenceGenerator:
 
     def gen(self):
         self.codes.append("app = FastAPI()")
-
-
-# This generates the base inference code that is served via FastAPI.
-class LiteLlmInferenceGenerator:
-    """This will generate as FastAPI app.py"""
-
-    def __init__(self):
-        self.imports = [
-            "from prompt_poet import Prompt",
-            "import litellm",
-            "from fastapi import FastAPI",
-            "from pydantic import BaseModel",
-        ]
-
-        self.env = Environment(loader=FileSystemLoader("backend/compile/templates"))
-        self.codes = []
-        self.endpoints = []
-        self.template0 = self.env.get_template("infer.py.tpl")
-        self.template1 = self.env.get_template("endpoint.py.tpl")
-
-    def add_fun(
-        self, schema: Schema, strategy: PromptStrategyEnum, implementation: str
-    ):
-        types = self.template0.render(schema=schema)
-        import0, code0 = split_imports(types)
-        self.imports.append(import0)
-        self.codes.append(code0)
-
-        endpoint = self.template1.render(
-            schema=schema, strategy=strategy.value, implementation=implementation
-        )
-        self.endpoints.append(endpoint)
-
-    def gen(self):
-        self.codes.append("app = FastAPI()")
-        return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
-
-
 
 
 if __name__ == "__main__":
