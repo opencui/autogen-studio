@@ -21,7 +21,7 @@ from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
 
-from backend.compile.codegen import compile_and_train, evaluate
+from backend.compile.straight_through import LiteSkillGenerator
 
 
 from ..chatmanager import AutoGenChatManager, WebSocketConnectionManager
@@ -381,30 +381,21 @@ async def create_implementation_complie(body: SignatureCompileRequest):
     except:
         return
 
-    args = {
-        "strategy": PromptStrategyEnum(body.prompt_strategy),
-        "schema": schema,
-        "skill": None if len(skills) == 0 else skills[0],
-        "opt_type": OptimizerEnum(body.optimizer),
-        "opt_config": {},
-        "training_set": data["data"]["training_sets"],
-        "model": data["data"]["models"][0],
-    }
-    print(args)
+    body.setAgent(agent)
+    body.setSchema(schema)
 
-    loop = asyncio.get_event_loop()
-    task = partial(compile_and_train, **args)
-    implementation, infer_code = await loop.run_in_executor(executor, task)
+    generator = LiteSkillGenerator()
+    code = generator(body)
 
     i = Implementation(
         name=body.name,
         description=body.description,
         agent_id=body.agent_id,
-        generated_prompt=json.dumps(implementation),
+        code=code,
+        generated_prompt="{}",
     )
 
     create_entity(i, Implementation, {})
-    print(infer_code)
 
     return data
 

@@ -498,8 +498,11 @@ class SignatureCompileRequest(SQLModel, table=True):
     def getWorkerModel(self) -> Model:
         pass
 
+    def setSchema(self, schema: Schema):
+        self.__table_args__["schema"] = schema
+
     def getSchema(self) -> Schema:
-        pass
+        return self.__table_args__["schema"]
 
 
 class Implementation(SQLModel, table=True):
@@ -510,6 +513,7 @@ class Implementation(SQLModel, table=True):
     name: str
     user_id: Optional[str] = None
     description: Optional[str] = None
+    code: Optional[str] = None
     generated_prompt: Optional[str] = None
 
     created_at: datetime = Field(
