@@ -34,20 +34,23 @@ class LiteSkillGenerator:
 
     # This is low level api, used to implement the high level api, where we just need to
     # extract the prompt template and
-    def generate(self, model_label: str, skill, schema: Schema):
+    def generate(self, model_label: str, module_label: str, module_prompt: str, schema: Schema):
         model = {
             "label": model_label
         }
-        return self.template.render(schema=schema, skill=skill, model=model)
+        agent = {
+            "name": module_label,
+            "prompt": module_prompt
+        }
+        return self.template.render(schema=schema, skill=agent, model=model)
 
     def __call__(self, compile_config: SignatureCompileRequest):
         # Hui, get the information and invoke the low level generate function.
-        pass
-
-
-    def gen(self):
-        self.codes.append("app = FastAPI()")
-        return "\n\n".join(["\n".join(self.imports)] + self.codes + self.endpoints)
+        model_label = None
+        agent_label = None
+        agent_prompt = None
+        schema = None
+        return self.generate(model_label, agent_label, agent_prompt, schema)
 
 
 # This provides the commandline
@@ -105,3 +108,6 @@ if __name__ == "__main__":
     code = generator.generate(model_label, skill, schema.model_dump())
     print(code)
 
+    # Hui, this is how you actually call this.
+    codes = []   # code are generated as above.
+    code = build_source(impls)
