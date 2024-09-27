@@ -416,7 +416,14 @@ async def create_implementation(body: Implementation):
 
 @api.post("/implementations/test")
 async def test_implementation(body: ImplementationTestRequest):
-    print(body)
+    implementations = []
+    result = list_entity(Agent, filters={}, return_json=False)
+    for agent in result.data:
+        result = list_entity(Implementation, filters={"agent_id": agent.id}).data
+        if len(result) > 0:
+            implementations.append(result[0])
+
+    print(implementations)
     return ImplementationTestResponse()
 
 
