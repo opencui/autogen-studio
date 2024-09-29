@@ -3,8 +3,21 @@ import jinja2
 from jinja2 import Environment, FileSystemLoader
 
 from backend import SchemaFieldMode, SchemaFieldTrueType
-from backend.datamodel import Schema, PromptStrategyEnum, Skill, OptimizerEnum, Model, Agent, SignatureCompileRequest, SchemaField
-from backend.compile.base import load_and_execute_code, split_imports, split_imports_into_nodes
+from backend.datamodel import (
+    Schema,
+    PromptStrategyEnum,
+    Skill,
+    OptimizerEnum,
+    Model,
+    Agent,
+    SignatureCompileRequest,
+    SchemaField,
+)
+from backend.compile.base import (
+    load_and_execute_code,
+    split_imports,
+    split_imports_into_nodes,
+)
 
 
 #
@@ -14,6 +27,7 @@ from backend.compile.base import load_and_execute_code, split_imports, split_imp
 # We will code gen a LiteSkill object, {Schema}Impl,
 # We will code gen the fastAPI endpoint for this skill.
 #
+
 
 # This generates the base inference code that is served via FastAPI.
 class LiteSkillGenerator:
@@ -34,22 +48,22 @@ class LiteSkillGenerator:
 
     # This is low level api, used to implement the high level api, where we just need to
     # extract the prompt template and
-    def generate(self, model_label: str, module_label: str, module_prompt: str, schema: Schema):
-        model = {
-            "label": model_label
-        }
-        agent = {
-            "name": module_label,
-            "prompt": module_prompt
-        }
+    def generate(
+        self, model_label: str, module_label: str, module_prompt: str, schema: Schema
+    ):
+        model = {"label": model_label}
+        agent = {"name": module_label, "prompt": module_prompt}
         return self.template.render(schema=schema, skill=agent, model=model)
 
     def __call__(self, compile_config: SignatureCompileRequest):
         # Hui, get the information and invoke the low level generate function.
-        model_label = None
-        agent_label = None
-        agent_prompt = None
-        schema = None
+        agent = compile_config.getAgent()
+
+        model_label = "groq/llama-3.1-70b-versatile"
+        agent_label = agent.config.get("name")
+        agent_prompt = agent.config.get("system_message")
+        schema = compile_config.getSchema()
+
         return self.generate(model_label, agent_label, agent_prompt, schema)
 
 
@@ -60,52 +74,64 @@ if __name__ == "__main__":
     compile_request = SignatureCompileRequest()
 
     fields = []
-    fields.append(SchemaField(
-        name="role",
-        mode=SchemaFieldMode.input,
-        type=SchemaFieldTrueType.string,
-        description="roel",
-        prefix="why"
-    ))
-    fields.append(SchemaField(
-        name="company",
-        mode=SchemaFieldMode.input,
-        type=SchemaFieldTrueType.string,
-        description="roel",
-        prefix="why"))
-    fields.append(SchemaField(
-        name="company_description",
-        mode=SchemaFieldMode.input,
-        type=SchemaFieldTrueType.string,
-        description="roel",
-        prefix="why"))
-    fields.append(SchemaField(
-        name="email",
-        mode=SchemaFieldMode.output,
-        type=SchemaFieldTrueType.string,
-        description="roel",
-        prefix="why"))
+    fields.append(
+        SchemaField(
+            name="role",
+            mode=SchemaFieldMode.input,
+            type=SchemaFieldTrueType.string,
+            description="roel",
+            prefix="why",
+        )
+    )
+    fields.append(
+        SchemaField(
+            name="company",
+            mode=SchemaFieldMode.input,
+            type=SchemaFieldTrueType.string,
+            description="roel",
+            prefix="why",
+        )
+    )
+    fields.append(
+        SchemaField(
+            name="company_description",
+            mode=SchemaFieldMode.input,
+            type=SchemaFieldTrueType.string,
+            description="roel",
+            prefix="why",
+        )
+    )
+    fields.append(
+        SchemaField(
+            name="email",
+            mode=SchemaFieldMode.output,
+            type=SchemaFieldTrueType.string,
+            description="roel",
+            prefix="why",
+        )
+    )
 
     schema = Schema(name="ColdCall", fields=fields)
     print(schema)
 
-    module_label = "ColdCaller"
-    module_prompt ="""
-- name: system instructions
-  role: system
-  content: |
-    Your are a great sales for BeThere.ai, a startup specialized in building greate conversational 
-    service. Draft a short message for the cold call the {{ role }} for {{ company }} and you are 
-    meant to be helpful and never harmful to humans.
-
-    {{ company }} is {{ company_description }}   
-"""
-
+    skill = {
+        "name": "ColdCaller",
+        "prompt": """
+            - name: system instructions
+              role: system
+              content: |
+                Your are a great sales for BeThere.ai, a startup specialized in building greate conversational 
+                service. Draft a short message for the cold call the {{ role }} for {{ company }} and you are 
+                meant to be helpful and never harmful to humans.
+            
+                {{ company }} is {{ company_description }}   
+            """,
+    }
     model_label = "groq/llama-3.1-70b-versatile"
     generator = LiteSkillGenerator()
     code = generator.generate(model_label, module_label, module_prompt, schema.model_dump())
     print(code)
 
     # Hui, this is how you actually call this.
-    codes = []   # code are generated as above.
+    codes = []  # code are generated as above.
     code = build_source(impls)
