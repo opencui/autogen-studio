@@ -355,11 +355,11 @@ class SocketMessage(SQLModel, table=False):
 
 
 class SchemaFieldTrueType(str, Enum):
-    any = "any"
+    any = "Any"
     int = "int"
     float = "float"
-    boolean = "boolean"
-    string = "string"
+    boolean = "bool"
+    string = "str"
 
 
 class SchemaFieldMode(str, Enum):
