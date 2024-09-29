@@ -13,6 +13,7 @@ import { appContext } from "../../../hooks/provider";
 import {
   fetchJSON,
   getServerUrl,
+  sampleAgentConfig,
   sanitizeConfig,
   timeAgo,
   truncateText,
@@ -454,6 +455,7 @@ const AgentsView = ({ }: any) => {
                 placement="bottomRight"
                 trigger={["click"]}
                 onClick={() => {
+                  setNewAgent(sampleAgentConfig())
                   setShowNewDetailComp(true);
                 }}
               >

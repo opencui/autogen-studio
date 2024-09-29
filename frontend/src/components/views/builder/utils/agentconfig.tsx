@@ -1077,7 +1077,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
   const [selectedEvaluation, setSelectedEvaluation] = React.useState<IEvaluation | null>(null);
   const [openDrawer, setOpenDrawer] = React.useState<boolean>(false);
   const [testInputs, setTestInputs] = React.useState<{ [key: string]: string }>({});
-  const [testResult, setTestResult] = React.useState<{ [key: string]: string }>({});
+  const [testResult, setTestResult] = React.useState<{ [key: string]: string } | null>(null);
 
   const [loading, setLoading] = React.useState<boolean>(false);
   const serverUrl = getServerUrl();
@@ -1261,7 +1261,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
           control={
             <Table
               pagination={false}
-              dataSource={schema.fields}
+              dataSource={schema.fields.filter((field) => field.mode === 'input')}
               columns={[{
                 title: "Name",
                 dataIndex: "name"
@@ -1278,29 +1278,31 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
             />
           }
         />
-        <ControlRowView
-          title="Result"
-          className="mt-4"
-          description=""
-          value={""}
-          control={
-            <Table
-              dataSource={schema.fields}
-              pagination={false}
-              columns={[{
-                title: "Name",
-                dataIndex: "name"
-              }, {
-                title: "Value",
-                dataIndex: "",
-                render: (_, record) => {
-                  return <Input value={testResult[record.name]} />;
-                }
-              }]}
-              rowKey="name"
-            />
-          }
-        />
+        {testResult &&
+          <ControlRowView
+            title="Result"
+            className="mt-4"
+            description=""
+            value={""}
+            control={
+              <Table
+                dataSource={schema.fields}
+                pagination={false}
+                columns={[{
+                  title: "Name",
+                  dataIndex: "name"
+                }, {
+                  title: "Value",
+                  dataIndex: "",
+                  render: (_, record) => {
+                    return <Input value={testResult[record.name]} />;
+                  }
+                }]}
+                rowKey="name"
+              />
+            }
+          /> || false
+        }
       </Drawer>
       <div className="     rounded  ">
         <div className="flex mt-2 pb-2 mb-2 border-b space-between" >
@@ -1317,7 +1319,7 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
               setTestInputs({});
               setTestResult({});
               setOpenDrawer(!openDrawer);
-            }}>Test</Button>
+            }}>Test (To remove)</Button>
         </div>
 
       </div>

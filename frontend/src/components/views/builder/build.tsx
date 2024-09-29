@@ -2,13 +2,15 @@ import * as React from "react";
 import SkillsView from "./skills";
 import AgentsView from "./agents";
 import WorkflowView from "./workflow";
-import { Tabs } from "antd";
+import { Button, Tabs, message } from "antd";
 import {
   BugAntIcon,
   CpuChipIcon,
   Square2StackIcon,
   Square3Stack3DIcon,
+
 } from "@heroicons/react/24/outline";
+import { RobotOutlined } from '@ant-design/icons';
 import ModelsView from "./models";
 import SchemasView from "./schemas";
 import CollectionsView from "./collections";
@@ -29,6 +31,9 @@ const BuildView = () => {
           defaultActiveKey="4"
           tabPosition="left"
           destroyInactiveTabPane
+          tabBarExtraContent={<Button icon={<RobotOutlined />} onClick={() => {
+            message.info("the feature is upcoming");
+          }} style={{ marginTop: 12, paddingLeft: 24 }} type="link">Test (Upcoming)</Button>}
           items={[
             {
               label: (
