@@ -78,7 +78,7 @@ if __name__ == "__main__":
         SchemaField(
             name="role",
             mode=SchemaFieldMode.input,
-            type=SchemaFieldTrueType.string,
+            true_type=SchemaFieldTrueType.string,
             description="roel",
             prefix="why",
         )
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         SchemaField(
             name="company",
             mode=SchemaFieldMode.input,
-            type=SchemaFieldTrueType.string,
+            true_type=SchemaFieldTrueType.string,
             description="roel",
             prefix="why",
         )
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         SchemaField(
             name="company_description",
             mode=SchemaFieldMode.input,
-            type=SchemaFieldTrueType.string,
+            true_type=SchemaFieldTrueType.string,
             description="roel",
             prefix="why",
         )
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         SchemaField(
             name="email",
             mode=SchemaFieldMode.output,
-            type=SchemaFieldTrueType.string,
+            true_type=SchemaFieldTrueType.string,
             description="roel",
             prefix="why",
         )
@@ -114,24 +114,23 @@ if __name__ == "__main__":
     schema = Schema(name="ColdCall", fields=fields)
     print(schema)
 
-    skill = {
-        "name": "ColdCaller",
-        "prompt": """
-            - name: system instructions
-              role: system
-              content: |
-                Your are a great sales for BeThere.ai, a startup specialized in building greate conversational 
-                service. Draft a short message for the cold call the {{ role }} for {{ company }} and you are 
-                meant to be helpful and never harmful to humans.
-            
-                {{ company }} is {{ company_description }}   
-            """,
-    }
+    module_label = "ColdCaller",
+    module_prompt = """
+- name: system instructions
+  role: system
+  content: |
+    Your are a great sales for BeThere.ai, a startup specialized in building greate conversational 
+    service. Draft a short message for the cold call the {{ role }} for {{ company }} and you are 
+    meant to be helpful and never harmful to humans.
+
+    {{ company }} is {{ company_description }}   
+"""
+
     model_label = "groq/llama-3.1-70b-versatile"
     generator = LiteSkillGenerator()
-    code = generator.generate(model_label, module_label, module_prompt, schema.model_dump())
+    code = generator.generate(model_label, model_label, module_prompt, schema.model_dump())
     print(code)
 
     # Hui, this is how you actually call this.
-    codes = []  # code are generated as above.
-    code = build_source(impls)
+    # codes = []  # code are generated as above.
+    # code = build_source(impls)
