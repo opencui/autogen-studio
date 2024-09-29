@@ -108,6 +108,7 @@ def build_source(module_sources: List[str]) -> str:
     rest_nodes = []
 
     setup_code = """
+    from typing import Any
     from prompt_poet import Prompt,
     import litellm,
     from fastapi import FastAPI
