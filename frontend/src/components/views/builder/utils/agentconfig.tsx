@@ -334,7 +334,7 @@ export const AgentConfigView = ({
               }
             />
 
-            <ControlRowView
+            {/* <ControlRowView
               title="Max Consecutive Auto Reply"
               className="mt-4"
               description="Max consecutive auto reply messages before termination."
@@ -360,9 +360,9 @@ export const AgentConfigView = ({
                 //   }}
                 // />
               }
-            />
+            /> */}
 
-            <ControlRowView
+            {/* <ControlRowView
               title="Human Input Mode"
               description="Defines when to request human input"
               // value={agent.config.human_input_mode}
@@ -386,7 +386,7 @@ export const AgentConfigView = ({
               control={
                 ""
               }
-            />
+            /> */}
 
             <ControlRowView
               title="System Message"
@@ -1879,7 +1879,7 @@ export const AgentViewer = ({
       {/* <RenderView viewIndex={currentViewIndex} /> */}
       <Tabs
         tabBarExtraContent={{
-          left: <div className="mr-4"><LeftOutlined onClick={close} /> <a className="text-blue">Module detail</a> </div>
+          left: <div className="mr-4"><LeftOutlined onClick={close} /> </div>
         }}
         tabBarStyle={{ paddingLeft: 0, marginLeft: 0 }}
         defaultActiveKey="1"
