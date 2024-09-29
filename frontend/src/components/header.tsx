@@ -76,17 +76,17 @@ const Header = ({ meta, link }: any) => {
                         <Icon icon="app" size={8} />
                       </div>{" "}
                     </span>
-                    <div className="pt-1 text-lg ml-14     inline-block">
+                    <div className="pt-1 text-lg ml-14 mt-3    inline-block">
                       <div className=" flex flex-col">
                         <div className="text-base">{meta.title}</div>
-                        <div className="text-xs"> {meta.description}</div>
+                        {/* <div className="text-xs"> {meta.description}</div> */}
                       </div>
                     </div>
                   </a>
                 </div>
 
                 <div className="hidden md:ml-6 md:flex md:space-x-6">
-                  {/* Current: "border-accent text-gray-900", Default: "border-transparent text-secondary hover:border-gray-300 hover:text-primary" */}
+                  {/* Current: "border-accent text-gray-900", Default: "border-transparent text-secondary hover:border-gray-300 hover:text-primary" 
                   {links.map((data, index) => {
                     const isActive = data.href === link;
                     const activeClass = isActive
@@ -112,6 +112,7 @@ const Header = ({ meta, link }: any) => {
                       </div>
                     );
                   })}
+                  */}
                 </div>
               </div>
 

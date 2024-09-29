@@ -22,7 +22,6 @@
   "agents": [
     {
       "type": "userproxy",
-
       "config": {
         "name": "userproxy",
         "human_input_mode": "NEVER",
@@ -205,7 +204,6 @@
       },
       "receiver": {
         "type": "assistant",
-
         "skills": [
           {
             "title": "find_papers_arxiv",
