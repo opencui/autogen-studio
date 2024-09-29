@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from types import NoneType
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
+from pydantic import validator, root_validator
 
 import json
 from openai.types.chat.chat_completion_named_tool_choice_param import Function
@@ -383,6 +384,22 @@ class SchemaField(SQLModel, table=False):
         default=SchemaFieldMode.any, sa_column=Column(SqlEnum(SchemaFieldMode))
     )
     prefix: str
+
+    @validator("true_type", pre=True, always=True)
+    def validate_true_type(cls, v):
+        if isinstance(v, SchemaFieldTrueType):
+            return v.value
+        if v == "string":
+            return SchemaFieldTrueType.string
+        if v == "bool":
+            return SchemaFieldTrueType.boolean
+        return v
+
+    @validator("mode", pre=True, always=True)
+    def validate_mode(cls, v):
+        if isinstance(v, SchemaFieldMode):
+            return v.value
+        return v
 
 
 class Schema(SQLModel, table=True):

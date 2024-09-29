@@ -4,6 +4,7 @@ import random
 import os
 import json
 import queue
+from sys import builtin_module_names
 import threading
 import traceback
 from functools import partial
@@ -21,6 +22,7 @@ from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
 
+from backend.compile.base import build_source
 from backend.compile.straight_through import LiteSkillGenerator
 
 
@@ -209,6 +211,10 @@ async def list_schema(user_id: str, schema_id: None | str = None):
 @api.post("/schemas")
 async def create_or_update_schema(schema: Schema):
     """Create or update one schema"""
+    schema.fields = [
+        SchemaField(**field) if isinstance(field, dict) else field
+        for field in schema.fields
+    ]
     return create_entity(schema, Schema, {})
 
 
@@ -423,7 +429,10 @@ async def test_implementation(body: ImplementationTestRequest):
         if len(result) > 0:
             implementations.append(result[0])
 
-    print(implementations)
+    print([i.get("code", "") for i in implementations][0])
+    code = build_source([i.get("code", "") for i in implementations])
+    print(code)
+
     return ImplementationTestResponse()
 
 

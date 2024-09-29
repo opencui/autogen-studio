@@ -10,7 +10,16 @@ from prompt_poet import Prompt
 
 import astor
 from pydantic import BaseModel
-from backend import PromptStrategyEnum, Schema, Skill, OptimizerEnum, Model, Collections, Agent, SignatureCompileRequest
+from backend import (
+    PromptStrategyEnum,
+    Schema,
+    Skill,
+    OptimizerEnum,
+    Model,
+    Collections,
+    Agent,
+    SignatureCompileRequest,
+)
 
 
 class FunctionNameExtractor(ast.NodeVisitor):
@@ -99,7 +108,6 @@ def split_imports_into_nodes(source_code):
     return import_nodes, rest_nodes
 
 
-
 # This is the simplistic building where we sequentially go through each build task, each returns a statements,
 # We then combine all the imports, and rest together respectively, from these statement, generate a source code
 # in str.
@@ -108,12 +116,12 @@ def build_source(module_sources: List[str]) -> str:
     rest_nodes = []
 
     setup_code = """
-    from typing import Any
-    from prompt_poet import Prompt,
-    import litellm,
-    from fastapi import FastAPI
-    from pydantic import BaseModel
-    app = FastAPI()
+from typing import Any
+from prompt_poet import Prompt
+import litellm
+from fastapi import FastAPI
+from pydantic import BaseModel
+app = FastAPI()
     """
 
     import_node, rest_node = split_imports_into_nodes(setup_code)
@@ -149,13 +157,13 @@ class LiteSkill:
 
     def project(self, old_dict):
         new_keys = {"role", "content"}
-        return { key : old_dict[key] for key in new_keys}
+        return {key: old_dict[key] for key in new_keys}
 
     def completion(self, input_node):
         prompt = Prompt(raw_template=self.template, template_data=input_node)
         response = litellm.completion(
             model=self.model_name,
-            messages=list(map(lambda x: self.project(vars(x)), prompt.parts))
+            messages=list(map(lambda x: self.project(vars(x)), prompt.parts)),
         )
         return response
 

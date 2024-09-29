@@ -2,14 +2,14 @@
 class {{schema.name}}Request(BaseModel):
     {% for field in schema.fields -%}
     {% if field.mode == "input" %}
-    {{field.name}} : {{field.true_type.value}}
+    {{field.name}} : {{field.true_type}}
     {% endif %}
     {%- endfor %}
 
 class {{schema.name}}Response(BaseModel):
     {% for field in schema.fields -%}
     {% if field.mode == "output" %}
-    {{field.name}} : {{field.true_type.value}}
+    {{field.name}} : {{field.true_type}}
     {% endif %}
     {%- endfor %}
 
