@@ -129,7 +129,7 @@ if __name__ == "__main__":
     }
     model_label = "groq/llama-3.1-70b-versatile"
     generator = LiteSkillGenerator()
-    code = generator.generate(model_label, skill, schema.model_dump())
+    code = generator.generate(model_label, module_label, module_prompt, schema.model_dump())
     print(code)
 
     # Hui, this is how you actually call this.
