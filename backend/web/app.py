@@ -3,6 +3,7 @@ import string
 import random
 import os
 import json
+from datetime import datetime
 import queue
 from sys import builtin_module_names
 import threading
@@ -10,10 +11,21 @@ import traceback
 from functools import partial
 from contextlib import asynccontextmanager
 from typing import Any, Collection
+import importlib.util
+from multiprocessing import Process
+from threading import Thread
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    Request,
+    Response as Fresponse,
+)
 from fastapi.staticfiles import StaticFiles
+from litellm.litellm_core_utils.litellm_logging import hashlib
 from loguru import logger
 from openai import OpenAIError
 from pydantic_core import SchemaValidator
@@ -21,6 +33,9 @@ from sqlalchemy.sql import label
 from sqlalchemy.sql.elements import CollectionAggregate
 from starlette.datastructures import UploadFile
 from typing import List
+
+import uvicorn
+import httpx
 
 from backend.compile.base import build_source
 from backend.compile.straight_through import LiteSkillGenerator
@@ -60,6 +75,7 @@ from ..version import VERSION
 
 from concurrent.futures import ProcessPoolExecutor
 
+loop = asyncio.get_event_loop()
 executor = ProcessPoolExecutor(max_workers=5)
 
 
@@ -140,8 +156,10 @@ app.add_middleware(
 
 
 api = FastAPI(root_path="/api")
+upstream_router = FastAPI(root_path="/upstream")
 # mount an api route such that the main route serves the ui and the /api
 app.mount("/api", api)
+app.mount("/upstream", upstream_router)
 
 app.mount("/", StaticFiles(directory=ui_folder_path, html=True), name="ui")
 api.mount(
@@ -152,9 +170,7 @@ api.mount(
 
 
 # manage websocket connections
-
-
-def create_entity(model: Any, model_class: Any, filters: dict = None):
+def create_entity(model: Any, model_class: Any, filters: dict | None = None):
     """Create a new entity"""
     model = check_and_cast_datetime_fields(model)
     try:
@@ -193,6 +209,107 @@ def delete_entity(model_class: Any, filters: dict = None):
     """Delete an entity"""
 
     return dbmanager.delete(filters=filters, model_class=model_class)
+
+
+upstream_map = {}
+upstream_lock = asyncio.Lock()
+
+
+def _del(m, k):
+    del m[k]
+
+
+@upstream_router.api_route(path="/{user_id}/{full_url:path}", methods=["GET", "POST"])
+async def upstream(user_id: str, full_url: str, request: Request):
+    implementations = []
+    result = list_entity(Agent, filters={}, return_json=False)
+    if result.data is not None:
+        for agent in result.data:
+            result = list_entity(Implementation, filters={"agent_id": agent.id})
+            if result.data is not None:
+                if len(result.data) > 0:
+                    implementations.append(result.data[0])
+
+    if len(implementations) == 0:
+        return Fresponse(content="no implementations", media_type="text/plain")
+
+    version = hashlib.md5(
+        (
+            "".join(
+                [
+                    f'{str(i.get("id", 0)) + str(i.get("created_at", datetime.now()))}'
+                    for i in implementations
+                ]
+            )
+            + user_id
+        ).encode("utf-8")
+    ).hexdigest()
+    base_path = f"/tmp/backend/uds/{version}"
+    os.makedirs(base_path, exist_ok=True)
+
+    uds = f"{base_path}/server.sock"
+    py_file = f"{base_path}/main.py"
+    base_url = f"/upstream/{user_id}"
+
+    print(user_id, uds, py_file)
+
+    process = upstream_map.get(version, None)
+    if process is None:
+        async with upstream_lock:
+            process = upstream_map.get(user_id, None)
+            if process is None:
+                code = build_source([i.get("code", "") for i in implementations])
+                with open(py_file, "w") as f:
+                    f.write(code)
+
+                spec = importlib.util.spec_from_file_location(py_file, py_file)
+                if spec is None:
+                    return Fresponse(
+                        content="import spec failed", media_type="text/plain"
+                    )
+
+                module = importlib.util.module_from_spec(spec)
+                if module is None:
+                    return Fresponse(
+                        content="import module failed", media_type="text/plain"
+                    )
+
+                spec.loader.exec_module(module)
+
+                app = FastAPI()
+                app.mount(base_url, module.app)
+
+                def start_server():
+                    uvicorn.run(app, workers=1, uds=uds)
+                    # uvicorn.run(app, workers=1, host="127.0.0.1", port=18888)
+
+                process = Process(target=start_server)
+                process.start()
+
+                Thread(
+                    target=lambda: process.join(600)
+                    or process.terminate()
+                    or process.join()
+                    or _del(upstream_map, version)
+                ).start()
+
+                upstream_map[version] = process
+
+    if not process.is_alive():
+        return Fresponse(content="run code failed", media_type="text/plain")
+
+    tp = httpx.AsyncHTTPTransport(uds=uds, retries=3)
+    async with httpx.AsyncClient(transport=tp) as client:
+        resp = await client.request(
+            method=request.method,
+            url=f"http://127.0.0.1{request.url.path}",
+            headers=request.headers.raw,
+            data=await request.body(),
+        )
+
+        return Fresponse(
+            status_code=resp.status_code, headers=resp.headers, content=resp.text
+        )
 
 
 @api.get("/schemas")
