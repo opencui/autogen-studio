@@ -158,8 +158,8 @@ app.add_middleware(
 api = FastAPI(root_path="/api")
 upstream_router = FastAPI(root_path="/upstream")
 # mount an api route such that the main route serves the ui and the /api
-app.mount("/api", api)
 app.mount("/upstream", upstream_router)
+app.mount("/api", api)
 
 app.mount("/", StaticFiles(directory=ui_folder_path, html=True), name="ui")
 api.mount(
