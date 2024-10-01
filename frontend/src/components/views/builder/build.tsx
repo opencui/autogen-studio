@@ -32,8 +32,8 @@ const BuildView = () => {
           tabPosition="left"
           destroyInactiveTabPane
           tabBarExtraContent={<Button icon={<RobotOutlined />} onClick={() => {
-            message.info("the feature is upcoming");
-          }} style={{ marginTop: 12, paddingLeft: 24 }} type="link">Test (Upcoming)</Button>}
+            window.open("http://20.115.52.76:14042/upstream/1@1.com/docs")
+          }} style={{ marginTop: 24, marginLeft: -40 }} type="link">Test</Button>}
           items={[
             {
               label: (
