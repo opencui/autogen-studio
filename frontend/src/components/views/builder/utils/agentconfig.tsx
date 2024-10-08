@@ -1313,13 +1313,13 @@ export const ImplementationDetail = ({ implementation, setImplementation, agentI
             {" "}
             <a>{data.name}</a>
           </div>
-          <Button
+          {/* <Button
             type="primary"
             onClick={() => {
               setTestInputs({});
               setTestResult({});
               setOpenDrawer(!openDrawer);
-            }}>Test (To remove)</Button>
+            }}>Test (To remove)</Button> */}
         </div>
 
       </div>
