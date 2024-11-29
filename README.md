@@ -1,7 +1,7 @@
 # AutoGen Studio
 
-[![PyPI version](https://badge.fury.io/py/autogenstudio.svg)](https://badge.fury.io/py/autogenstudio)
 [![Downloads](https://static.pepy.tech/badge/autogenstudio/week)](https://pepy.tech/project/autogenstudio)
+[![PyPI version](https://badge.fury.io/py/autogenstudio.svg)](https://badge.fury.io/py/autogenstudio)
 
 ![ARA](./docs/ara_stockprices.png)
 
@@ -16,28 +16,20 @@ Code for AutoGen Studio is on GitHub at [microsoft/autogen](https://github.com/m
 
 **Updates**
 
-> April 17: AutoGen Studio database layer is now rewritten to use [SQLModel](https://sqlmodel.tiangolo.com/) (Pydantic + SQLAlchemy). This provides entity linking (skills, models, agents and workflows are linked via association tables) and supports multiple [database backend dialects](https://docs.sqlalchemy.org/en/20/dialects/) supported in SQLAlchemy (SQLite, PostgreSQL, MySQL, Oracle, Microsoft SQL Server). The backend database can be specified a `--database-uri` argument when running the application. For example, `autogenstudio ui --database-uri sqlite:///database.sqlite` for SQLite and `autogenstudio ui --database-uri postgresql+psycopg://user:password@localhost/dbname` for PostgreSQL.
+> April 17: AutoGen Studio database layer is now rewritten to use [SQLModel](https://sqlmodel.tiangolo.com/) (Pydantic + SQLAlchemy). This provides entity linking (skills, models, agents and workflows are linked via association tables) and supports multiple [database backend dialects](https://docs.sqlalchemy.org/en/20/dialects/) supported in SQLAlchemy (SQLite, PostgreSQL, MySQL, Oracle, Microsoft SQL Server). The backend database can be specified a `--database-uri` argument when running the application. For example, `backend ui --database-uri sqlite:///database.sqlite` for SQLite and `backend ui --database-uri postgresql+psycopg://user:password@localhost/dbname` for PostgreSQL.
 
-> March 12: Default directory for AutoGen Studio is now /home/<user>/.autogenstudio. You can also specify this directory using the `--appdir` argument when running the application. For example, `autogenstudio ui --appdir /path/to/folder`. This will store the database and other files in the specified directory e.g. `/path/to/folder/database.sqlite`. `.env` files in that directory will be used to set environment variables for the app.
+> March 12: Default directory for AutoGen Studio is now /home/<user>/.backend. You can also specify this directory using the `--appdir` argument when running the application. For example, `backend ui --appdir /path/to/folder`. This will store the database and other files in the specified directory e.g. `/path/to/folder/database.sqlite`. `.env` files in that directory will be used to set environment variables for the app.
 
 Project Structure:
 
-- _autogenstudio/_ code for the backend classes and web api (FastAPI)
+- backend/ code for the backend classes and web api (FastAPI)
 - _frontend/_ code for the webui, built with Gatsby and TailwindCSS
 
 ### Installation
 
 There are two ways to install AutoGen Studio - from PyPi or from source. We **recommend installing from PyPi** unless you plan to modify the source code.
 
-1.  **Install from PyPi**
-
-    We recommend using a virtual environment (e.g., conda) to avoid conflicts with existing Python packages. With Python 3.10 or newer active in your virtual environment, use pip to install AutoGen Studio:
-
-    ```bash
-    pip install autogenstudio
-    ```
-
-2.  **Install from Source**
+1.  **Install from Source**
 
     > Note: This approach requires some familiarity with building interfaces in React.
 
@@ -49,7 +41,7 @@ There are two ways to install AutoGen Studio - from PyPi or from source. We **re
       pip install -e .
       ```
 
-    - Navigate to the `samples/apps/autogen-studio/frontend` directory, install dependencies, and build the UI:
+    - Navigate to the `frontend` directory, install dependencies, and build the UI:
 
       ```bash
       npm install -g gatsby-cli
@@ -63,7 +55,7 @@ For Windows users, to build the frontend, you may need alternative commands to b
 
 ```bash
 
-  gatsby clean && rmdir /s /q ..\\autogenstudio\\web\\ui 2>nul & (set \"PREFIX_PATH_VALUE=\" || ver>nul) && gatsby build --prefix-paths && xcopy /E /I /Y public ..\\autogenstudio\\web\\ui
+  gatsby clean && rmdir /s /q ..\\backend\\web\\ui 2>nul & (set \"PREFIX_PATH_VALUE=\" || ver>nul) && gatsby build --prefix-paths && xcopy /E /I /Y public ..\\backend\\web\\ui
 
 ```
 
@@ -72,7 +64,7 @@ For Windows users, to build the frontend, you may need alternative commands to b
 Once installed, run the web UI by entering the following in your terminal:
 
 ```bash
-autogenstudio ui --port 8081
+backend ui --port 8081
 ```
 
 This will start the application on the specified port. Open your web browser and go to `http://localhost:8081/` to begin using AutoGen Studio.
@@ -80,7 +72,7 @@ This will start the application on the specified port. Open your web browser and
 AutoGen Studio also takes several parameters to customize the application:
 
 - `--host <host>` argument to specify the host address. By default, it is set to `localhost`. Y
-- `--appdir <appdir>` argument to specify the directory where the app files (e.g., database and generated user files) are stored. By default, it is set to the a `.autogenstudio` directory in the user's home directory.
+- `--appdir <appdir>` argument to specify the directory where the app files (e.g., database and generated user files) are stored. By default, it is set to the a `.backend` directory in the user's home directory.
 - `--port <port>` argument to specify the port number. By default, it is set to `8080`.
 - `--reload` argument to enable auto-reloading of the server when changes are made to the code. By default, it is set to `False`.
 - `--database-uri` argument to specify the database URI. Example values include `sqlite:///database.sqlite` for SQLite and `postgresql+psycopg://user:password@localhost/dbname` for PostgreSQL. If this is not specified, the database URIL defaults to a `database.sqlite` file in the `--appdir` directory.
